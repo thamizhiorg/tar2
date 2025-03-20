@@ -1,18 +1,22 @@
 import { StyleSheet, Text, View, FlatList, Image } from "react-native";
 
 const samplePeople = [
-  { id: '1', name: 'Sarah Connor', image: 'https://i.pravatar.cc/150?img=1' },
-  { id: '2', name: 'John Smith', image: 'https://i.pravatar.cc/150?img=2' },
-  { id: '3', name: 'Emma Watson', image: 'https://i.pravatar.cc/150?img=3' },
-  { id: '4', name: 'Michael Brown', image: 'https://i.pravatar.cc/150?img=4' },
-  { id: '5', name: 'Lisa Anderson', image: 'https://i.pravatar.cc/150?img=5' },
+  { id: '1', name: 'Hallie Alvarado', location: 'from Home', image: 'https://randomuser.me/api/portraits/women/32.jpg' },
+  { id: '2', name: 'Jackson Houston', location: 'from Work', image: 'https://randomuser.me/api/portraits/men/44.jpg' },
+  { id: '3', name: 'Lina Bradley', location: 'from University', image: 'https://randomuser.me/api/portraits/women/28.jpg' },
+  { id: '4', name: 'Katie White', location: 'from Home', image: 'https://randomuser.me/api/portraits/women/17.jpg' },
+  { id: '5', name: 'Mae Walsh', location: 'from Work', image: 'https://randomuser.me/api/portraits/women/56.jpg' },
+  { id: '6', name: 'Adeline McGuire', location: 'from University', image: 'https://randomuser.me/api/portraits/women/63.jpg' },
 ];
 
 export default function PeopleScreen() {
   const renderItem = ({ item }) => (
     <View style={styles.listItem}>
       <Image source={{ uri: item.image }} style={styles.avatar} />
-      <Text style={styles.name}>{item.name}</Text>
+      <View>
+        <Text style={styles.location}>{item.location}</Text>
+        <Text style={styles.name}>{item.name}</Text>
+      </View>
     </View>
   );
 
@@ -37,13 +41,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   listContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: 0,
+    paddingTop: 2,
   },
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#f9f9f9',
   },
   avatar: {
     width: 46,
@@ -51,13 +58,16 @@ const styles = StyleSheet.create({
     borderRadius: 23,
     marginRight: 16,
   },
+  location: {
+    fontSize: 14,
+    color: '#888',
+  },
   name: {
     fontSize: 16,
     color: '#1a1a1a',
     fontWeight: '500',
   },
   separator: {
-    height: 1,
-    backgroundColor: '#f0f0f0',
+    height: 2,
   },
 });
