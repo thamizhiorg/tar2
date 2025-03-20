@@ -1,15 +1,18 @@
-import React from 'react';
+import * as React from 'react';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import ProductsComponent from '../agents/products';
+import InventoryComponent from '../agents/inventory';
 import { useAgent } from '../../context/AgentContext';
 
 export default function WorkspacePage() {
   // Use the AgentContext to get the selected agent
   const { selectedAgent } = useAgent();
   
-  // Render the Products component if the selected agent is "📦 Products"
+  // Render the appropriate component based on the selected agent
   if (selectedAgent === "📦 Products") {
     return <ProductsComponent />;
+  } else if (selectedAgent === "🀫 Inventory") {
+    return <InventoryComponent />;
   }
 
   // Otherwise render the default workspace screen
