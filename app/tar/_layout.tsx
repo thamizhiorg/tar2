@@ -60,7 +60,7 @@ export default function RootLayout() {
           }}
         />
         <Tabs.Screen
-          name="index"
+          name="ai"
           options={{
             tabBarIcon: ({ color }) => (
               <Feather name="square" size={20} color={color} />
