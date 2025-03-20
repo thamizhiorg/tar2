@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Dimensions, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAgent } from '../context/AgentContext';
 
 interface HUDProps {
   selectedAgent: string;
@@ -24,6 +25,7 @@ const agentOptions = [
 
 export default function HUD({ selectedAgent, setSelectedAgent, showAgentList, setShowAgentList }: HUDProps) {
   const router = useRouter();
+  const agentContext = useAgent();
 
   const handleAgentTap = () => {
     setShowAgentList(!showAgentList);
@@ -31,6 +33,7 @@ export default function HUD({ selectedAgent, setSelectedAgent, showAgentList, se
 
   const selectAgent = (agent: string) => {
     setSelectedAgent(agent);
+    agentContext.setSelectedAgent(agent); // Update context
     setShowAgentList(false);
   };
 
