@@ -17,10 +17,6 @@ export default function AIScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>AI Assistant</Text>
-      </View>
-      
       <ScrollView style={styles.chatContainer}>
         {chatHistory.map((msg) => (
           <View
@@ -54,18 +50,7 @@ export default function AIScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    padding: 20,
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: '#333',
   },
   chatContainer: {
     flex: 1,
@@ -78,7 +63,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   aiMessage: {
-    backgroundColor: '#fff',
+    backgroundColor: '#f8f8f8',
     alignSelf: 'flex-start',
     borderWidth: 1,
     borderColor: '#eee',

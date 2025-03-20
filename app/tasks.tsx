@@ -17,7 +17,6 @@ export default function TasksScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>My Tasks</Text>
       <FlatList
         data={sampleTasks}
         renderItem={renderTask}
@@ -35,14 +34,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 16,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '600',
-    marginBottom: 24,
-    marginTop: 16,
-  },
   list: {
     flex: 1,
+    marginTop: 16,
   },
   taskItem: {
     paddingVertical: 16,

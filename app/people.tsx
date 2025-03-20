@@ -20,7 +20,6 @@ export default function PeopleScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>People</Text>
       <FlatList
         data={samplePeople}
         renderItem={renderItem}
@@ -37,16 +36,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '600',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
-    color: '#1a1a1a',
-  },
   listContent: {
     paddingHorizontal: 20,
+    paddingTop: 20,
   },
   listItem: {
     flexDirection: 'row',
