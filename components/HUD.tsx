@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Dimensions, StatusBar } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAgent } from '../context/AgentContext';
+import { init } from "@instantdb/react-native";
+
+const APP_ID = "84f087af-f6a5-4a5f-acbc-bc4008e3a725";
+const db = init({ appId: APP_ID });
 
 interface HUDProps {
   selectedAgent: string;
@@ -26,6 +30,23 @@ const agentOptions = [
 export default function HUD({ selectedAgent, setSelectedAgent, showAgentList, setShowAgentList }: HUDProps) {
   const router = useRouter();
   const agentContext = useAgent();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Get the authenticated user's email
+    const getUser = async () => {
+      try {
+        const user = await db.getAuth();
+        if (user && user.email) {
+          setUserEmail(user.email);
+        }
+      } catch (error) {
+        console.error("Error getting authenticated user:", error);
+      }
+    };
+    
+    getUser();
+  }, []);
 
   const handleAgentTap = () => {
     setShowAgentList(!showAgentList);
@@ -35,6 +56,15 @@ export default function HUD({ selectedAgent, setSelectedAgent, showAgentList, se
     setSelectedAgent(agent);
     agentContext.setSelectedAgent(agent); // Update context
     setShowAgentList(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await db.auth.signOut();
+      router.replace("/"); // Navigate back to login screen
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   const renderAgentOption = (agent: string) => {
@@ -79,6 +109,23 @@ export default function HUD({ selectedAgent, setSelectedAgent, showAgentList, se
                 {renderAgentOption(agent)}
               </TouchableOpacity>
             ))}
+            
+            {/* Logout option */}
+            <TouchableOpacity 
+              style={[styles.agentOption, styles.logoutOption]}
+              onPress={handleLogout}
+              activeOpacity={0.7}
+            >
+              <View style={styles.agentOptionInner}>
+                <Text style={styles.agentEmoji}>🚪</Text>
+                <View>
+                  <Text style={styles.agentName}>Logout</Text>
+                  {userEmail && (
+                    <Text style={styles.userEmail}>{userEmail}</Text>
+                  )}
+                </View>
+              </View>
+            </TouchableOpacity>
           </ScrollView>
         </View>
       )}
@@ -181,5 +228,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#333',
     textAlign: 'center',
+  },
+  logoutOption: {
+    marginTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+  },
+  userEmail: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 2,
   },
 });

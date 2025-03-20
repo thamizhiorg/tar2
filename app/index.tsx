@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Text, View, TextInput, TouchableOpacity, StyleSheet, Animated } from "react-native";
+import { Text, View, TextInput, TouchableOpacity, StyleSheet, Animated, BackHandler } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { init } from "@instantdb/react-native";
 
@@ -72,6 +72,53 @@ function AnimatedSubtext() {
 
 export default function App() {
   const [sentEmail, setSentEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        setIsLoading(true);
+        const user = await db.getAuth();
+        if (user && user.email) {
+          // User is authenticated, redirect to the AI screen
+          router.replace("/tar/ai");
+        }
+      } catch (error) {
+        console.error("Authentication check failed:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  // Handle hardware back button on Android
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        // Check if we're in the authentication flow
+        if (sentEmail) {
+          setSentEmail("");
+          return true; // Prevent default behavior
+        }
+        return false; // Let the default behavior happen
+      }
+    );
+
+    return () => backHandler.remove();
+  }, [sentEmail]);
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -101,13 +148,23 @@ export default function App() {
 
 function EmailStep({ onSendEmail }: { onSendEmail: (email: string) => void }) {
   const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    onSendEmail(email);
-    db.auth.sendMagicCode({ email }).catch((err) => {
-      alert("Uh oh :" + err.body?.message);
-      onSendEmail("");
-    });
+  const handleSubmit = async () => {
+    if (!email || !email.includes('@')) {
+      alert("Please enter a valid email address");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await db.auth.sendMagicCode({ email });
+      onSendEmail(email);
+    } catch (err) {
+      alert("Error sending verification code: " + (err.body?.message || "Unknown error"));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -119,9 +176,14 @@ function EmailStep({ onSendEmail }: { onSendEmail: (email: string) => void }) {
         placeholder="Enter your email"
         keyboardType="email-address"
         autoCapitalize="none"
+        editable={!isSubmitting}
       />
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Send Code</Text>
+      <TouchableOpacity 
+        style={[styles.button, isSubmitting && styles.disabledButton]} 
+        onPress={handleSubmit}
+        disabled={isSubmitting}
+      >
+        <Text style={styles.buttonText}>{isSubmitting ? "Sending..." : "Send Code"}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -129,18 +191,26 @@ function EmailStep({ onSendEmail }: { onSendEmail: (email: string) => void }) {
 
 function CodeStep({ sentEmail }: { sentEmail: string }) {
   const [code, setCode] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = () => {
-    db.auth.signInWithMagicCode({ email: sentEmail, code })
-      .then(() => {
-        // Navigate to AI screen on successful verification
-        router.push("/tar/ai");
-      })
-      .catch((err) => {
-        setCode("");
-        alert("Uh oh :" + err.body?.message);
-      });
+  const handleSubmit = async () => {
+    if (!code) {
+      alert("Please enter the verification code");
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      await db.auth.signInWithMagicCode({ email: sentEmail, code });
+      // Navigate to AI screen on successful verification
+      router.replace("/tar/ai");
+    } catch (err) {
+      setCode("");
+      alert("Verification failed: " + (err.body?.message || "Invalid code"));
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   return (
@@ -155,9 +225,14 @@ function CodeStep({ sentEmail }: { sentEmail: string }) {
         onChangeText={setCode}
         placeholder="123456..."
         keyboardType="number-pad"
+        editable={!isVerifying}
       />
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Verify</Text>
+      <TouchableOpacity 
+        style={[styles.button, isVerifying && styles.disabledButton]} 
+        onPress={handleSubmit}
+        disabled={isVerifying}
+      >
+        <Text style={styles.buttonText}>{isVerifying ? "Verifying..." : "Verify"}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -167,6 +242,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   topContainer: {
     flex: 1,
@@ -210,6 +289,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,  // Changed from 4 to 10
     alignItems: "center",
     width: "100%",  // Add this to maintain full width
+  },
+  disabledButton: {
+    backgroundColor: "#e0e0e0",
+    opacity: 0.7,
   },
   buttonText: {
     color: "#666",  // Changed from white to grey
