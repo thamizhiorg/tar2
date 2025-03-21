@@ -11,77 +11,67 @@ const _schema = i.schema({
     $users: i.entity({
       email: i.string().unique().indexed(),
     }),
-    agents: i.entity({
-      flow: i.string(),
-      icon: i.string(),
-      name: i.string(),
-    }),
-    executions: i.entity({
-      agentId: i.string().indexed(),
-      completedAt: i.number(),
-      duration: i.number(),
-      error: i.any(),
-      input: i.any(),
-      metadata: i.any(),
-      output: i.any(),
-      startedAt: i.number(),
-      status: i.string(),
-      stepExecutions: i.any(),
-    }),
     inventory: i.entity({
       available: i.number(),
       committed: i.number(),
-      createdAt: i.number(),
+      cost: i.number(),
+      dtime: i.number(),
+      f1: i.string(),
+      fulfillment: i.string(),
+      location: i.string(),
+      modifiers: i.string(),
       name: i.string(),
       qty: i.number(),
+      rlevel: i.number(),
+      sellprice: i.number(),
       sku: i.string(),
+      status: i.string(),
       stock: i.number(),
       unavailable: i.number(),
-      userId: i.string(),
       vname: i.string(),
+      weight: i.number(),
     }),
     messages: i.entity({
       createdAt: i.string(),
       text: i.string(),
     }),
+    ondevice: i.entity({
+      ids: i.string(),
+      title: i.string(),
+    }),
     products: i.entity({
+      attributes: i.string(),
       category: i.string(),
       collection: i.string(),
-      createdAt: i.number(),
+      f1: i.string(),
+      f2: i.string(),
+      f3: i.string(),
+      f4: i.string(),
+      f5: i.string(),
+      metadata: i.string(),
       notes: i.string(),
       options: i.string(),
       pos: i.string(),
-      storeid: i.string(),
+      schannels: i.string(),
+      seo: i.string(),
       tags: i.string(),
+      tax: i.string(),
       title: i.string(),
       type: i.string(),
-      vectorize: i.boolean(),
+      unit: i.string(),
       vendor: i.string(),
       web: i.boolean(),
+    }),
+    stores: i.entity({
+      name: i.string(),
     }),
     todos: i.entity({
       createdAt: i.number(),
       done: i.boolean(),
       text: i.string(),
     }),
-    tools: i.entity({
-      function: i.string(),
-      name: i.string(),
-    }),
   },
   links: {
-    inventory$files: {
-      forward: {
-        on: "inventory",
-        has: "one",
-        label: "$files",
-      },
-      reverse: {
-        on: "$files",
-        has: "one",
-        label: "inventory",
-      },
-    },
     inventoryProduct: {
       forward: {
         on: "inventory",
@@ -94,40 +84,52 @@ const _schema = i.schema({
         label: "inventory",
       },
     },
-    products$file1: {
+    inventoryStore: {
       forward: {
-        on: "products",
+        on: "inventory",
         has: "many",
-        label: "$file1",
+        label: "store",
       },
       reverse: {
-        on: "$file1",
+        on: "stores",
         has: "many",
-        label: "products",
+        label: "inventory",
       },
     },
-    products$files: {
+    ondevice$users: {
       forward: {
-        on: "products",
-        has: "many",
-        label: "$files",
-      },
-      reverse: {
-        on: "$files",
-        has: "many",
-        label: "products",
-      },
-    },
-    todos$users: {
-      forward: {
-        on: "todos",
+        on: "ondevice",
         has: "many",
         label: "$users",
       },
       reverse: {
         on: "$users",
         has: "many",
-        label: "todos",
+        label: "ondevice",
+      },
+    },
+    productsStore: {
+      forward: {
+        on: "products",
+        has: "many",
+        label: "store",
+      },
+      reverse: {
+        on: "stores",
+        has: "many",
+        label: "products",
+      },
+    },
+    stores$users: {
+      forward: {
+        on: "stores",
+        has: "many",
+        label: "$users",
+      },
+      reverse: {
+        on: "$users",
+        has: "many",
+        label: "stores",
       },
     },
   },
