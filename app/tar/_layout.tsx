@@ -1,13 +1,28 @@
 import { Tabs } from "expo-router";
 import { StyleSheet, View, Pressable } from "react-native";
-import { Ionicons, Feather, MaterialIcons } from "@expo/vector-icons";
-import { useState } from "react";
+import { Ionicons, Feather, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
+import { useState, useEffect } from "react";
 import HUD from "../../components/HUD";
 import { AgentProvider } from "../../context/AgentContext";
+import * as db from "../utils/db";
 
-export default function RootLayout() {
+function TarLayout() {
   const [selectedAgent, setSelectedAgent] = useState("None");
   const [showAgentList, setShowAgentList] = useState(false);
+
+  // Initialize the database on app start
+  useEffect(() => {
+    const initApp = async () => {
+      try {
+        await db.initDatabase();
+        console.log("Database initialized in layout");
+      } catch (error) {
+        console.error("Error initializing database:", error);
+      }
+    };
+
+    initApp();
+  }, []);
 
   return (
     <AgentProvider>
@@ -27,8 +42,6 @@ export default function RootLayout() {
             tabBarShowLabel: false, // Hide the labels
             tabBarIconStyle: { marginBottom: 0 }, // Remove padding around icons
             tabBarHideOnKeyboard: true,
-            tabBarPressColor: 'transparent', // Remove press effect on Android
-            tabBarHighlightColor: 'transparent', // Remove highlight color
             tabBarItemStyle: {
               backgroundColor: 'transparent', // Prevent background color changes
             },
@@ -37,12 +50,9 @@ export default function RootLayout() {
                 {...props}
                 android_ripple={{ color: 'transparent' }}
                 style={(state) => {
-                  // Get the base style (either function result or direct style)
-                  const baseStyle = typeof props.style === 'function' ? props.style(state) : props.style;
-                  
-                  // Apply our modifications while preserving the original layout properties
+                  // Apply our modifications
                   return {
-                    ...baseStyle,
+                    ...(typeof props.style === 'object' ? props.style : {}),
                     opacity: 1, // Prevent opacity changes on press
                     flex: 1,
                     alignItems: 'center',
@@ -85,6 +95,7 @@ export default function RootLayout() {
               ),
             }}
           />
+          {/* Removed pages tab */}
         </Tabs>
       </View>
     </AgentProvider>
@@ -105,3 +116,5 @@ const styles = StyleSheet.create({
     borderTopColor: '#E0E0E0',
   },
 });
+
+export default TarLayout;
