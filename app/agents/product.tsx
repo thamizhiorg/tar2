@@ -2,47 +2,50 @@ import { init, id, i, InstaQLEntity } from "@instantdb/react-native";
 import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity } from "react-native";
 import React, { useState } from "react";
 import schema, { AppSchema } from "../../instant.schema";
-import ProductEditModal from "../components/ProductEditModal";
+import ProductCard from "../components/ProductCard";
 
 const APP_ID = "84f087af-f6a5-4a5f-acbc-bc4008e3a725";
 
+type OnDevice = InstaQLEntity<AppSchema, "ondevice">;
 type Product = InstaQLEntity<AppSchema, "products">;
 
 const db = init({ appId: APP_ID, schema });
 
 function App() {
-  const { isLoading, error, data } = db.useQuery({ products: {} });
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
-  if (error) {
-    return (
-      <View style={styles.container}>
-        <Text>Error: {error.message}</Text>
-      </View>
-    );
-  }
+  const { isLoading, error, data } = db.useQuery({ 
+    ondevice: {},
+    products: {} // We still need products for the card view
+  });
+
+  if (isLoading) return <View style={styles.container}><Text>Loading...</Text></View>;
+  if (error) return <View style={styles.container}><Text>Error: {error.message}</Text></View>;
+
+  const ondeviceItems = data?.ondevice || [];
   const products = data?.products || [];
+
+  // Create a map of products by their id
+  const productMap = products.reduce((acc, product) => {
+    acc[product.id] = product;
+    return acc;
+  }, {} as Record<string, any>);
+
   return (
     <View style={styles.container}>
       <View style={styles.mainContainer}>
         <ProductForm />
-        <ProductList products={products} />
+        <ProductList ondeviceItems={ondeviceItems} productMap={productMap} />
       </View>
     </View>
   );
 }
 
-function addProduct(title: string, userId: string) {
-  const productId = id();
+function addOnDevice(title: string, userId: string) {
+  const deviceId = id();
   db.transact(
-    db.tx.products[productId].update({
+    db.tx.ondevice[deviceId].update({
       title,
-      id: productId,
+      pageid: deviceId,
+      agent: 'products'
     })
   );
 }
@@ -57,11 +60,11 @@ function ProductForm() {
     <View style={styles.form}>
       <TextInput
         style={styles.input}
-        placeholder="Product Title"
+        placeholder="Device Title"
         onSubmitEditing={(e) => {
           const title = e.nativeEvent.text;
           if (title && user) {
-            addProduct(title, user.id);
+            addOnDevice(title, user.id);
             e.nativeEvent.text = "";
           }
         }}
@@ -70,17 +73,19 @@ function ProductForm() {
   );
 }
 
-function ProductList({ products }: { products: Product[] }) {
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+function ProductList({ ondeviceItems, productMap }: { ondeviceItems: OnDevice[], productMap: Record<string, any> }) {
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const handleProductPress = (product: Product) => {
+  const handleProductPress = (ondeviceItem: OnDevice) => {
+    const product = productMap[ondeviceItem.pageid];
     setSelectedProduct(product);
     setModalVisible(true);
   };
 
   const handleCloseModal = () => {
     setModalVisible(false);
+    setSelectedProduct(null);
   };
 
   return (
@@ -89,24 +94,25 @@ function ProductList({ products }: { products: Product[] }) {
         <View style={styles.tableHeader}>
           <Text style={[styles.headerCell, { flex: 1 }]}>Title</Text>
         </View>
-        {products.map((product) => {
-          return (
-            <TouchableOpacity 
-              key={product.id} 
-              style={styles.tableRow}
-              onPress={() => handleProductPress(product)}
-            >
-              <Text style={[styles.cell, { flex: 1 }]}>{product.title}</Text>
-            </TouchableOpacity>
-          );
-        })}
+        {ondeviceItems.map((item) => (
+          <TouchableOpacity 
+            key={item.id} 
+            style={styles.tableRow}
+            onPress={() => handleProductPress(item)}
+          >
+            <Text style={[styles.cell, { flex: 1 }]}>{item.title}</Text>
+          </TouchableOpacity>
+        ))}
       </ScrollView>
 
-      <ProductEditModal
-        product={selectedProduct}
-        isVisible={modalVisible}
-        onClose={handleCloseModal}
-      />
+      {modalVisible && selectedProduct && (
+        <View style={styles.modalContainer}>
+          <ProductCard
+            product={selectedProduct}
+            onClose={handleCloseModal}
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -169,6 +175,15 @@ const styles = StyleSheet.create({
     color: "#666",
     paddingHorizontal: 12,
     paddingVertical: 4,
+  },
+  modalContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 16,
   },
 });
 

@@ -36,7 +36,8 @@ const _schema = i.schema({
       text: i.string(),
     }),
     ondevice: i.entity({
-      ids: i.string(),
+      agent: i.string(),
+      pageid: i.string(),
       title: i.string(),
     }),
     products: i.entity({
