@@ -1,6 +1,8 @@
 import { init, id, i, InstaQLEntity } from "@instantdb/react-native";
 import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
 import schema, { AppSchema } from "../../instant.schema";
+import ProductEditModal from "../components/ProductEditModal";
 
 const APP_ID = "84f087af-f6a5-4a5f-acbc-bc4008e3a725";
 
@@ -69,19 +71,43 @@ function ProductForm() {
 }
 
 function ProductList({ products }: { products: Product[] }) {
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const handleProductPress = (product: Product) => {
+    setSelectedProduct(product);
+    setModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+  };
+
   return (
-    <ScrollView style={styles.table}>
-      <View style={styles.tableHeader}>
-        <Text style={[styles.headerCell, { flex: 1 }]}>Title</Text>
-      </View>
-      {products.map((product) => {
-        return (
-          <View key={product.id} style={styles.tableRow}>
-            <Text style={[styles.cell, { flex: 1 }]}>{product.title}</Text>
-          </View>
-        );
-      })}
-    </ScrollView>
+    <View style={{ flex: 1 }}>
+      <ScrollView style={styles.table}>
+        <View style={styles.tableHeader}>
+          <Text style={[styles.headerCell, { flex: 1 }]}>Title</Text>
+        </View>
+        {products.map((product) => {
+          return (
+            <TouchableOpacity 
+              key={product.id} 
+              style={styles.tableRow}
+              onPress={() => handleProductPress(product)}
+            >
+              <Text style={[styles.cell, { flex: 1 }]}>{product.title}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
+      <ProductEditModal
+        product={selectedProduct}
+        isVisible={modalVisible}
+        onClose={handleCloseModal}
+      />
+    </View>
   );
 }
 
