@@ -14,6 +14,9 @@ import {
   Switch,
   Dimensions,
   SafeAreaView,
+  Image,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import GlobalStyles, { 
@@ -24,6 +27,8 @@ import GlobalStyles, {
   Cards, 
   Components 
 } from "../../styles/globalStyles";
+import * as ImagePicker from 'expo-image-picker';
+import { getPresignedUploadUrl, uploadFileWithPresignedUrl, getPublicUrl, generateUniqueFilename } from "../../utils/s3";
 
 const APP_ID = "84f087af-f6a5-4a5f-acbc-bc4008e3a725";
 
@@ -327,6 +332,8 @@ function EditProductModal({
   const [selectedInventoryIds, setSelectedInventoryIds] = useState<string[]>([]);
   const [showInventorySelector, setShowInventorySelector] = useState(false);
   const [activeTab, setActiveTab] = useState('core');
+  const [uploading, setUploading] = useState<{[key: string]: boolean}>({});
+  const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({});
   
   // Initialize form data when product changes
   useEffect(() => {
@@ -391,6 +398,124 @@ function EditProductModal({
     }
   };
 
+  // New image upload function
+  const pickAndUploadImage = async (fieldKey: keyof Product) => {
+    try {
+      // Request permission
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant camera roll permissions to upload images.');
+        return;
+      }
+      
+      // Pick the image
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+      
+      if (result.canceled) {
+        return;
+      }
+      
+      const pickedAsset = result.assets?.[0];
+      if (!pickedAsset?.uri) {
+        Alert.alert('Error', 'Failed to pick image');
+        return;
+      }
+      
+      // Start uploading process
+      setUploading({...uploading, [fieldKey]: true});
+      setUploadProgress({...uploadProgress, [fieldKey]: 0});
+      
+      // Generate a unique filename for the image
+      const fileName = generateUniqueFilename(pickedAsset.uri.split('/').pop() || 'image.jpg');
+      
+      // Get content type based on the file extension
+      const contentType = pickedAsset.uri.toLowerCase().endsWith('.png') 
+        ? 'image/png' 
+        : 'image/jpeg';
+      
+      // Get presigned URL for upload
+      const presignedUrl = await getPresignedUploadUrl(fileName, contentType);
+      
+      // Upload the file
+      const success = await uploadFileWithPresignedUrl(pickedAsset.uri, presignedUrl, contentType);
+      
+      if (success) {
+        // Get the public URL
+        const publicUrl = getPublicUrl(fileName);
+        
+        // Update form data with the new image URL
+        handleInputChange(fieldKey, publicUrl);
+        
+        // Upload complete
+        setUploadProgress({...uploadProgress, [fieldKey]: 100});
+      } else {
+        Alert.alert('Upload Failed', 'Failed to upload image to storage.');
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+      Alert.alert('Upload Error', 'An error occurred during upload.');
+    } finally {
+      setUploading({...uploading, [fieldKey]: false});
+    }
+  };
+  
+  // Image component to render
+  const renderImageComponent = (fieldKey: keyof Product, index: number) => {
+    const imageUrl = formData[fieldKey] as string;
+    const isUploading = uploading[fieldKey];
+    
+    return (
+      <View style={Components.mediaRow}>
+        <View style={Components.mediaThumbnailContainer}>
+          {isUploading ? (
+            <View style={Components.mediaThumbnail}>
+              <ActivityIndicator size="small" color={Colors.secondary} />
+            </View>
+          ) : imageUrl ? (
+            <View style={Components.mediaThumbnail}>
+              <Image 
+                source={{ uri: imageUrl }} 
+                style={{ width: '100%', height: '100%', borderRadius: 4 }} 
+                resizeMode="cover"
+              />
+            </View>
+          ) : (
+            <TouchableOpacity 
+              style={Components.emptyMediaThumbnail}
+              onPress={() => pickAndUploadImage(fieldKey)}
+            >
+              <Ionicons name="cloud-upload-outline" size={24} color="#888" />
+            </TouchableOpacity>
+          )}
+        </View>
+        <View style={Components.mediaInputContainer}>
+          <Text style={Components.mediaLabel}>Media {index}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TextInput
+              style={[Components.mediaInput, { flex: 1 }]}
+              value={imageUrl}
+              onChangeText={(value) => handleInputChange(fieldKey, value)}
+              placeholder="Image URL"
+            />
+            <TouchableOpacity 
+              style={Components.uploadButton}
+              onPress={() => pickAndUploadImage(fieldKey)}
+              disabled={isUploading}
+            >
+              <Ionicons name="cloud-upload" size={20} color={Colors.secondary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
   const renderCoreFields = () => (
     <View style={Layout.tabContent}>
       <View style={Layout.formGroup}>
@@ -440,125 +565,12 @@ function EditProductModal({
     <View style={Layout.tabContent}>
       <Text style={Components.sectionHeader}>Product Media</Text>
       
-      {/* Media 1 */}
-      <View style={Components.mediaRow}>
-        <View style={Components.mediaThumbnailContainer}>
-          {formData.f1 ? (
-            <View style={Components.mediaThumbnail}>
-              <Ionicons name="image" size={24} color={Colors.secondary} />
-            </View>
-          ) : (
-            <View style={Components.emptyMediaThumbnail}>
-              <Ionicons name="add" size={24} color="#888" />
-            </View>
-          )}
-        </View>
-        <View style={Components.mediaInputContainer}>
-          <Text style={Components.mediaLabel}>Media 1</Text>
-          <TextInput
-            style={Components.mediaInput}
-            value={formData.f1}
-            onChangeText={(value) => handleInputChange('f1', value)}
-            placeholder="Enter media URL"
-          />
-        </View>
-      </View>
-
-      {/* Media 2 */}
-      <View style={Components.mediaRow}>
-        <View style={Components.mediaThumbnailContainer}>
-          {formData.f2 ? (
-            <View style={Components.mediaThumbnail}>
-              <Ionicons name="image" size={24} color={Colors.secondary} />
-            </View>
-          ) : (
-            <View style={Components.emptyMediaThumbnail}>
-              <Ionicons name="add" size={24} color="#888" />
-            </View>
-          )}
-        </View>
-        <View style={Components.mediaInputContainer}>
-          <Text style={Components.mediaLabel}>Media 2</Text>
-          <TextInput
-            style={Components.mediaInput}
-            value={formData.f2}
-            onChangeText={(value) => handleInputChange('f2', value)}
-            placeholder="Enter media URL"
-          />
-        </View>
-      </View>
-
-      {/* Media 3 */}
-      <View style={Components.mediaRow}>
-        <View style={Components.mediaThumbnailContainer}>
-          {formData.f3 ? (
-            <View style={Components.mediaThumbnail}>
-              <Ionicons name="image" size={24} color={Colors.secondary} />
-            </View>
-          ) : (
-            <View style={Components.emptyMediaThumbnail}>
-              <Ionicons name="add" size={24} color="#888" />
-            </View>
-          )}
-        </View>
-        <View style={Components.mediaInputContainer}>
-          <Text style={Components.mediaLabel}>Media 3</Text>
-          <TextInput
-            style={Components.mediaInput}
-            value={formData.f3}
-            onChangeText={(value) => handleInputChange('f3', value)}
-            placeholder="Enter media URL"
-          />
-        </View>
-      </View>
-
-      {/* Media 4 */}
-      <View style={Components.mediaRow}>
-        <View style={Components.mediaThumbnailContainer}>
-          {formData.f4 ? (
-            <View style={Components.mediaThumbnail}>
-              <Ionicons name="image" size={24} color={Colors.secondary} />
-            </View>
-          ) : (
-            <View style={Components.emptyMediaThumbnail}>
-              <Ionicons name="add" size={24} color="#888" />
-            </View>
-          )}
-        </View>
-        <View style={Components.mediaInputContainer}>
-          <Text style={Components.mediaLabel}>Media 4</Text>
-          <TextInput
-            style={Components.mediaInput}
-            value={formData.f4}
-            onChangeText={(value) => handleInputChange('f4', value)}
-            placeholder="Enter media URL"
-          />
-        </View>
-      </View>
-
-      {/* Media 5 */}
-      <View style={Components.mediaRow}>
-        <View style={Components.mediaThumbnailContainer}>
-          {formData.f5 ? (
-            <View style={Components.mediaThumbnail}>
-              <Ionicons name="image" size={24} color={Colors.secondary} />
-            </View>
-          ) : (
-            <View style={Components.emptyMediaThumbnail}>
-              <Ionicons name="add" size={24} color="#888" />
-            </View>
-          )}
-        </View>
-        <View style={Components.mediaInputContainer}>
-          <Text style={Components.mediaLabel}>Media 5</Text>
-          <TextInput
-            style={Components.mediaInput}
-            value={formData.f5}
-            onChangeText={(value) => handleInputChange('f5', value)}
-            placeholder="Enter media URL"
-          />
-        </View>
-      </View>
+      {/* Media fields using renderImageComponent */}
+      {renderImageComponent('f1', 1)}
+      {renderImageComponent('f2', 2)}
+      {renderImageComponent('f3', 3)}
+      {renderImageComponent('f4', 4)}
+      {renderImageComponent('f5', 5)}
     </View>
   );
 
