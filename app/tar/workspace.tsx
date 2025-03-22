@@ -2,6 +2,7 @@ import * as React from 'react';
 import { View, Text, SafeAreaView } from 'react-native';
 import ProductsComponent from '../agents/products';
 import InventoryComponent from '../agents/inventory';
+import ProductComponent from '../agents/product';
 import { useAgent } from '../../context/AgentContext';
 import GlobalStyles, { Layout, Typography } from '../../styles/globalStyles';
 
@@ -14,6 +15,8 @@ export default function WorkspacePage() {
     return <ProductsComponent />;
   } else if (selectedAgent === "🀫 Inventory") {
     return <InventoryComponent />;
+  } else if (selectedAgent === "🎈 Sales") {
+    return <ProductComponent />;
   }
 
   // Otherwise render the default workspace screen
