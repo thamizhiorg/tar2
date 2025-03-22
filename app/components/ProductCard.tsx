@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, SafeAreaView, Dimensions, BackHandler, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, SafeAreaView, Dimensions, BackHandler, Image, Alert, ActivityIndicator } from 'react-native';
 import { InstaQLEntity, init } from "@instantdb/react-native";
 import { AppSchema } from "../../instant.schema";
+import * as ImagePicker from 'expo-image-picker';
+import { uploadFileWithPresignedUrl, getPresignedUploadUrl, generateUniqueFilename } from '../../utils/s3';
 
 const APP_ID = "84f087af-f6a5-4a5f-acbc-bc4008e3a725";
 const db = init({ appId: APP_ID });
@@ -16,15 +18,7 @@ interface ProductCardProps {
 const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => {
   const [activeTab, setActiveTab] = useState('basic');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
-  // Sample product images (replace with actual product images)
-  const productImages = [
-    'https://via.placeholder.com/150',
-    'https://via.placeholder.com/150/0000FF',
-    'https://via.placeholder.com/150/FF0000',
-    'https://via.placeholder.com/150/00FF00',
-    'https://via.placeholder.com/150/FFFF00',
-  ];
+  const [isUploading, setIsUploading] = useState(false);
   
   // Add hardware back button handler
   useEffect(() => {
@@ -51,12 +45,77 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
   // Merge real-time data with initial product data
   const product = data?.products?.[0] || initialProduct;
 
+  // Get image URLs from product's f1-f5 fields
+  const productImages = [
+    product.f1 || 'https://via.placeholder.com/150?text=Tap+to+Upload',
+    product.f2 || 'https://via.placeholder.com/150?text=Tap+to+Upload',
+    product.f3 || 'https://via.placeholder.com/150?text=Tap+to+Upload',
+    product.f4 || 'https://via.placeholder.com/150?text=Tap+to+Upload',
+    product.f5 || 'https://via.placeholder.com/150?text=Tap+to+Upload',
+  ];
+
   const handleInputChange = (field: string, value: string) => {
     db.transact(db.tx.products[product.id].update({ [field]: value }));
   };
 
   const handleImageChange = (index: number) => {
     setCurrentImageIndex(index);
+  };
+
+  const handleImageUpload = async (index: number) => {
+    try {
+      // Request permission
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (!permissionResult.granted) {
+        Alert.alert('Permission Required', 'You need to grant access to your photos to upload images.');
+        return;
+      }
+
+      // Pick image
+      const pickerResult = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (pickerResult.canceled) return;
+
+      // Start upload process
+      setIsUploading(true);
+      
+      const imageUri = pickerResult.assets[0].uri;
+      const filename = imageUri.split('/').pop() || 'image.jpg';
+      const uniqueFilename = generateUniqueFilename(filename);
+      
+      // Get presigned URL for S3 upload
+      const contentType = 'image/jpeg';
+      const presignedUrl = await getPresignedUploadUrl(uniqueFilename, contentType);
+      
+      // Upload file to S3
+      const uploadSuccess = await uploadFileWithPresignedUrl(imageUri, presignedUrl, contentType);
+      
+      if (uploadSuccess) {
+        // Create public URL and update the product's field based on index
+        const publicUrl = `https://f6d1d15e6f0b37b4b8fcad3c41a7922d.r2.cloudflarestorage.com/tarapp-pqdhr/${uniqueFilename}`;
+        const fieldName = `f${index + 1}` as keyof Product;
+        
+        db.transact(db.tx.products[product.id].update({
+          [fieldName]: publicUrl
+        }));
+        
+        // Set the current image index to the uploaded image
+        setCurrentImageIndex(index);
+      } else {
+        Alert.alert('Upload Failed', 'There was a problem uploading your image.');
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+      Alert.alert('Error', 'An error occurred while uploading the image.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const tabs = [
@@ -75,12 +134,20 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
               <View style={styles.basicInfoHeader}>
                 <TouchableOpacity 
                   style={styles.imageThumbnail}
-                  onPress={() => setCurrentImageIndex((currentImageIndex + 1) % productImages.length)}
+                  onPress={() => handleImageUpload(currentImageIndex)}
+                  disabled={isUploading}
                 >
-                  <Image 
-                    source={{ uri: productImages[currentImageIndex] }} 
-                    style={styles.productImage} 
-                  />
+                  {isUploading ? (
+                    <View style={styles.uploadingContainer}>
+                      <ActivityIndicator size="large" color="#007AFF" />
+                      <Text style={styles.uploadingText}>Uploading...</Text>
+                    </View>
+                  ) : (
+                    <Image 
+                      source={{ uri: productImages[currentImageIndex] }} 
+                      style={styles.productImage}
+                    />
+                  )}
                   <View style={styles.imageIndicators}>
                     {productImages.map((_, index) => (
                       <TouchableOpacity 
@@ -89,9 +156,16 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
                           styles.indicator, 
                           currentImageIndex === index && styles.activeIndicator
                         ]}
-                        onPress={() => handleImageChange(index)}
+                        onPress={() => isUploading ? null : handleImageChange(index)}
+                        onLongPress={() => isUploading ? null : handleImageUpload(index)}
+                        disabled={isUploading}
                       >
-                        <Text style={styles.indicatorText}>{index + 1}</Text>
+                        <Text style={[
+                          styles.indicatorText,
+                          product[`f${index + 1}` as keyof Product] ? styles.indicatorTextUploaded : {}
+                        ]}>
+                          {index + 1}
+                        </Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -109,6 +183,9 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
                     onChangeText={(value) => handleInputChange('category', value)}
                     placeholder="Category"
                   />
+                  <Text style={styles.imageHint}>
+                    Tap image to upload • Long press number to change specific image
+                  </Text>
                 </View>
               </View>
               
@@ -165,11 +242,29 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
           <View style={styles.tabContent}>
             <InfoRow label="SEO" value={product.seo} />
             <InfoRow label="Metadata" value={product.metadata} />
-            <InfoRow label="F1" value={product.f1} />
-            <InfoRow label="F2" value={product.f2} />
-            <InfoRow label="F3" value={product.f3} />
-            <InfoRow label="F4" value={product.f4} />
-            <InfoRow label="F5" value={product.f5} />
+            <View style={styles.imagesContainer}>
+              <Text style={styles.imagesSectionTitle}>Product Images</Text>
+              <View style={styles.imagesGrid}>
+                {[1, 2, 3, 4, 5].map((num) => {
+                  const fieldName = `f${num}` as keyof Product;
+                  const imageUrl = product[fieldName] as string;
+                  return (
+                    <TouchableOpacity 
+                      key={num}
+                      style={styles.metadataImageContainer}
+                      onPress={() => handleImageUpload(num - 1)}
+                      disabled={isUploading}
+                    >
+                      <Image 
+                        source={{ uri: imageUrl || `https://via.placeholder.com/150?text=Image+${num}` }} 
+                        style={styles.metadataImage}
+                      />
+                      <Text style={styles.metadataImageLabel}>Image {num}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
           </View>
         );
     }
@@ -392,6 +487,62 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000',
+  },
+  uploadingContainer: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  uploadingText: {
+    marginTop: 5,
+    color: '#007AFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  imageHint: {
+    fontSize: 11,
+    color: '#999',
+    marginTop: 5,
+  },
+  indicatorTextUploaded: {
+    color: '#007AFF',
+    fontWeight: 'bold',
+  },
+  imagesContainer: {
+    marginTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    paddingTop: 15,
+  },
+  imagesSectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  imagesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  metadataImageContainer: {
+    width: '18%',
+    marginBottom: 15,
+  },
+  metadataImage: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  metadataImageLabel: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 4,
   },
 });
 
