@@ -16,9 +16,9 @@ interface HUDProps {
 
 const agentOptions = [
   '🌌 Space',
-  '🎈 Sales',
   '📦 Products',
-  '🀫 Inventory',
+  '🀫 Inventory', 
+  '🎈 Sales',
   '🥁 Posts',
   '🔗 Pages',
   '〰️ Path',
@@ -31,6 +31,15 @@ export default function HUD({ selectedAgent, setSelectedAgent, showAgentList, se
   const router = useRouter();
   const agentContext = useAgent();
   const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  // Initialize with Space agent
+  useEffect(() => {
+    if (!selectedAgent || selectedAgent === 'None') {
+      const defaultAgent = '� Space';
+      setSelectedAgent(defaultAgent);
+      agentContext.setSelectedAgent(defaultAgent);
+    }
+  }, []);
 
   useEffect(() => {
     // Get the authenticated user's email

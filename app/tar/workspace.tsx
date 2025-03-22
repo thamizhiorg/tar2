@@ -3,32 +3,25 @@ import { View, Text, SafeAreaView } from 'react-native';
 import ProductsComponent from '../agents/products';
 import InventoryComponent from '../agents/inventory';
 import ProductComponent from '../agents/product';
+import SpaceComponent from '../agents/space';
 import { useAgent } from '../../context/AgentContext';
 import GlobalStyles, { Layout, Typography } from '../../styles/globalStyles';
 
 export default function WorkspacePage() {
-  // Use the AgentContext to get the selected agent
   const { selectedAgent } = useAgent();
   
-  // Render the appropriate component based on the selected agent
-  if (selectedAgent === "📦 Products") {
-    return <ProductsComponent />;
-  } else if (selectedAgent === "🀫 Inventory") {
-    return <InventoryComponent />;
-  } else if (selectedAgent === "🎈 Sales") {
-    return <ProductComponent />;
+  // Render components based on selected agent
+  switch(selectedAgent) {
+    case "📦 Products":
+      return <ProductsComponent />;
+    case "🀫 Inventory":
+      return <InventoryComponent />;
+    case "🎈 Sales":
+      return <ProductComponent />;
+    case "🌌 Space":
+      return <SpaceComponent />;
+    default:
+      // If no agent is selected or "Space" is selected, show Space agent
+      return <SpaceComponent />;
   }
-
-  // Otherwise render the default workspace screen
-  return (
-    <SafeAreaView style={Layout.container}>
-      <View style={[Layout.centered, Layout.padding]}>
-        <Text style={Typography.title}>Workspace</Text>
-        <Text style={Typography.caption}>Manage your workspace here</Text>
-        {selectedAgent && selectedAgent !== "None" && (
-          <Text style={Typography.small}>Selected agent: {selectedAgent}</Text>
-        )}
-      </View>
-    </SafeAreaView>
-  );
 }

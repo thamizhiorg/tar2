@@ -8,7 +8,7 @@ import * as db from "../utils/db";
 import GlobalStyles, { Layout, Components } from "../../styles/globalStyles";
 
 function TarLayout() {
-  const [selectedAgent, setSelectedAgent] = useState("None");
+  const [selectedAgent, setSelectedAgent] = useState('🌌 Space');
   const [showAgentList, setShowAgentList] = useState(false);
 
   // Initialize the database on app start

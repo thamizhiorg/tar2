@@ -14,7 +14,7 @@ const db = init({ appId: APP_ID, schema });
 function App() {
   const { isLoading, error, data } = db.useQuery({ 
     ondevice: {},
-    products: {} // We still need products for the card view
+    products: {}
   });
 
   if (isLoading) return <View style={styles.container}><Text>Loading...</Text></View>;
@@ -23,7 +23,6 @@ function App() {
   const ondeviceItems = data?.ondevice || [];
   const products = data?.products || [];
 
-  // Create a map of products by their id
   const productMap = products.reduce((acc, product) => {
     acc[product.id] = product;
     return acc;
@@ -32,7 +31,6 @@ function App() {
   return (
     <View style={styles.container}>
       <View style={styles.mainContainer}>
-        <ProductForm />
         <ProductList ondeviceItems={ondeviceItems} productMap={productMap} />
       </View>
     </View>
@@ -52,25 +50,6 @@ function addOnDevice(title: string, userId: string) {
 
 function deleteProduct(product: Product) {
   db.transact(db.tx.products[product.id].delete());
-}
-
-function ProductForm() {
-  const { user } = db.useAuth();
-  return (
-    <View style={styles.form}>
-      <TextInput
-        style={styles.input}
-        placeholder="Device Title"
-        onSubmitEditing={(e) => {
-          const title = e.nativeEvent.text;
-          if (title && user) {
-            addOnDevice(title, user.id);
-            e.nativeEvent.text = "";
-          }
-        }}
-      />
-    </View>
-  );
 }
 
 function ProductList({ ondeviceItems, productMap }: { ondeviceItems: OnDevice[], productMap: Record<string, any> }) {
@@ -183,7 +162,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: 16,
   },
 });
 
