@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, FlatList, Image } from "react-native";
+import GlobalStyles, { Layout, Typography, Colors, Cards } from "../../styles/globalStyles";
 
 const samplePeople = [
   { id: '1', name: 'Hallie Alvarado', location: 'from Home', image: 'https://randomuser.me/api/portraits/women/32.jpg' },
@@ -14,8 +15,8 @@ export default function PeopleScreen() {
     <View style={styles.listItem}>
       <Image source={{ uri: item.image }} style={styles.avatar} />
       <View>
-        <Text style={styles.location}>{item.location}</Text>
-        <Text style={styles.name}>{item.name}</Text>
+        <Text style={Typography.small}>{item.location}</Text>
+        <Text style={Typography.body}>{item.name}</Text>
       </View>
     </View>
   );
@@ -23,7 +24,7 @@ export default function PeopleScreen() {
   const ItemSeparator = () => <View style={styles.separator} />;
 
   return (
-    <View style={styles.container}>
+    <View style={Layout.container}>
       <FlatList
         data={samplePeople}
         renderItem={renderItem}
@@ -35,11 +36,8 @@ export default function PeopleScreen() {
   );
 }
 
+// Using a mixed approach with global color references and component-specific styles
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   listContent: {
     paddingHorizontal: 0,
     paddingTop: 2,
@@ -50,22 +48,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: Colors.surface,
   },
   avatar: {
     width: 46,
     height: 46,
     borderRadius: 23,
     marginRight: 16,
-  },
-  location: {
-    fontSize: 14,
-    color: '#888',
-  },
-  name: {
-    fontSize: 16,
-    color: '#1a1a1a',
-    fontWeight: '500',
   },
   separator: {
     height: 2,

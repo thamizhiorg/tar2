@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity } from "react-native";
+import { Text, View, TextInput, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { useState } from "react";
+import GlobalStyles, { Layout, Typography, Colors, Forms } from "../../styles/globalStyles";
 
 export default function AIScreen() {
   const [message, setMessage] = useState("");
@@ -16,7 +17,7 @@ export default function AIScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={Layout.container}>
       <ScrollView style={styles.chatContainer}>
         {chatHistory.map((msg) => (
           <View
@@ -26,7 +27,9 @@ export default function AIScreen() {
               msg.isAI ? styles.aiMessage : styles.userMessage,
             ]}
           >
-            <Text style={styles.messageText}>{msg.text}</Text>
+            <Text style={[Typography.body, msg.isAI ? null : styles.userMessageText]}>
+              {msg.text}
+            </Text>
           </View>
         ))}
       </ScrollView>
@@ -37,7 +40,7 @@ export default function AIScreen() {
           value={message}
           onChangeText={setMessage}
           placeholder="Type your message..."
-          placeholderTextColor="#666"
+          placeholderTextColor={Colors.text.tertiary}
         />
         <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
           <Text style={styles.sendButtonText}>Send</Text>
@@ -47,11 +50,8 @@ export default function AIScreen() {
   );
 }
 
+// Mixed approach: use global styles for common elements and local styles for specific components
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   chatContainer: {
     flex: 1,
     padding: 16,
@@ -63,43 +63,42 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   aiMessage: {
-    backgroundColor: '#f8f8f8',
+    backgroundColor: Colors.surface,
     alignSelf: 'flex-start',
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: Colors.border.lighter,
   },
   userMessage: {
-    backgroundColor: '#007AFF',
+    backgroundColor: Colors.primary,
     alignSelf: 'flex-end',
   },
-  messageText: {
-    fontSize: 16,
-    color: '#333',
+  userMessageText: {
+    color: Colors.background,
   },
   inputContainer: {
     flexDirection: 'row',
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.background,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: Colors.border.lighter,
   },
   input: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: Colors.surface,
     padding: 12,
     borderRadius: 24,
     marginRight: 8,
     fontSize: 16,
   },
   sendButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: Colors.primary,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 24,
     justifyContent: 'center',
   },
   sendButtonText: {
-    color: '#fff',
+    color: Colors.background,
     fontSize: 16,
     fontWeight: '600',
   },

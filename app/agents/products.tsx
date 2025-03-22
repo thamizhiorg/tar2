@@ -3,7 +3,6 @@ import { init, id, i, InstaQLEntity } from "@instantdb/react-native";
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
   ScrollView,
   TouchableOpacity,
@@ -17,6 +16,14 @@ import {
   SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import GlobalStyles, { 
+  Colors, 
+  Typography, 
+  Layout, 
+  Forms, 
+  Cards, 
+  Components 
+} from "../../styles/globalStyles";
 
 const APP_ID = "84f087af-f6a5-4a5f-acbc-bc4008e3a725";
 
@@ -96,14 +103,14 @@ function App() {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <View style={Layout.container}>
         <Text>Loading...</Text>
       </View>
     );
   }
   if (error) {
     return (
-      <View style={styles.container}>
+      <View style={Layout.container}>
         <Text>Error: {error.message}</Text>
       </View>
     );
@@ -112,8 +119,8 @@ function App() {
   const inventoryItems = data?.inventory || [];
 
   return (
-    <View style={styles.container}>
-      <View style={styles.mainContainer}>
+    <View style={Layout.container}>
+      <View style={Layout.mainContainer}>
         <ProductForm inventoryItems={inventoryItems} />
         <ProductList products={products} inventoryItems={inventoryItems} />
       </View>
@@ -225,28 +232,28 @@ function ProductForm({ inventoryItems }: { inventoryItems: Inventory[] }) {
   };
 
   return (
-    <View style={styles.form}>
-      <View style={styles.inputContainer}>
+    <View style={Components.form}>
+      <View style={Forms.inputContainer}>
         <TextInput
-          style={styles.input}
+          style={Forms.input}
           placeholder="Product Title"
           value={title}
           onChangeText={setTitle}
         />
-        <TouchableOpacity style={styles.createButton} onPress={handleSubmit}>
-          <Ionicons name="add" size={24} color="#4a86e8" />
+        <TouchableOpacity style={Forms.createButton} onPress={handleSubmit}>
+          <Ionicons name="add" size={24} color={Colors.secondary} />
         </TouchableOpacity>
       </View>
       
-      <View style={styles.inputRow}>
+      <View style={Layout.formRow}>
         <TextInput
-          style={[styles.input, styles.smallInput]}
+          style={[Forms.input, Forms.smallInput]}
           placeholder="Category"
           value={category}
           onChangeText={setCategory}
         />
         <TextInput
-          style={[styles.input, styles.smallInput]}
+          style={[Forms.input, Forms.smallInput]}
           placeholder="Vendor"
           value={vendor}
           onChangeText={setVendor}
@@ -254,10 +261,10 @@ function ProductForm({ inventoryItems }: { inventoryItems: Inventory[] }) {
       </View>
 
       <TouchableOpacity 
-        style={styles.inventoryButton} 
+        style={Forms.inventoryButton} 
         onPress={() => setShowInventoryModal(true)}
       >
-        <Text style={styles.inventoryButtonText}>
+        <Text style={Forms.inventoryButtonText}>
           Link Inventory ({selectedInventoryIds.length})
         </Text>
       </TouchableOpacity>
@@ -268,32 +275,32 @@ function ProductForm({ inventoryItems }: { inventoryItems: Inventory[] }) {
         transparent={true}
         onRequestClose={() => setShowInventoryModal(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select Inventory Items</Text>
+        <View style={Components.modalContainer}>
+          <View style={Components.modalContent}>
+            <Text style={Typography.modalTitle}>Select Inventory Items</Text>
             <FlatList
               data={inventoryItems}
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
                 <TouchableOpacity 
                   style={[
-                    styles.inventoryItem,
-                    selectedInventoryIds.includes(item.id) && styles.selectedInventoryItem
+                    Cards.inventoryItem,
+                    selectedInventoryIds.includes(item.id) && Cards.selectedInventoryItem
                   ]}
                   onPress={() => toggleInventorySelection(item.id)}
                 >
-                  <Text style={styles.inventoryName}>{item.name || item.sku || 'Unnamed Item'}</Text>
+                  <Text style={Typography.body}>{item.name || item.sku || 'Unnamed Item'}</Text>
                   {selectedInventoryIds.includes(item.id) && (
-                    <Ionicons name="checkmark" size={20} color="#4a86e8" />
+                    <Ionicons name="checkmark" size={20} color={Colors.secondary} />
                   )}
                 </TouchableOpacity>
               )}
             />
             <TouchableOpacity 
-              style={styles.closeButton}
+              style={Forms.closeButton}
               onPress={() => setShowInventoryModal(false)}
             >
-              <Text style={styles.closeButtonText}>Done</Text>
+              <Text style={Forms.closeButtonText}>Done</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -385,31 +392,31 @@ function EditProductModal({
   };
 
   const renderCoreFields = () => (
-    <View style={styles.tabContent}>
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Title</Text>
+    <View style={Layout.tabContent}>
+      <View style={Layout.formGroup}>
+        <Text style={Forms.label}>Title</Text>
         <TextInput
-          style={styles.modalInput}
+          style={Forms.modalInput}
           value={formData.title}
           onChangeText={(value) => handleInputChange('title', value)}
           placeholder="Product Title"
         />
       </View>
 
-      <View style={styles.formRow}>
-        <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}>
-          <Text style={styles.label}>Category</Text>
+      <View style={Layout.formRow}>
+        <View style={[Layout.formGroup, { flex: 1, marginRight: 8 }]}>
+          <Text style={Forms.label}>Category</Text>
           <TextInput
-            style={styles.modalInput}
+            style={Forms.modalInput}
             value={formData.category}
             onChangeText={(value) => handleInputChange('category', value)}
             placeholder="Category"
           />
         </View>
-        <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
-          <Text style={styles.label}>Vendor</Text>
+        <View style={[Layout.formGroup, { flex: 1, marginLeft: 8 }]}>
+          <Text style={Forms.label}>Vendor</Text>
           <TextInput
-            style={styles.modalInput}
+            style={Forms.modalInput}
             value={formData.vendor}
             onChangeText={(value) => handleInputChange('vendor', value)}
             placeholder="Vendor"
@@ -417,10 +424,10 @@ function EditProductModal({
         </View>
       </View>
 
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Type</Text>
+      <View style={Layout.formGroup}>
+        <Text style={Forms.label}>Type</Text>
         <TextInput
-          style={styles.modalInput}
+          style={Forms.modalInput}
           value={formData.type}
           onChangeText={(value) => handleInputChange('type', value)}
           placeholder="Product Type"
@@ -430,26 +437,26 @@ function EditProductModal({
   );
 
   const renderMediaFields = () => (
-    <View style={styles.tabContent}>
-      <Text style={styles.sectionHeader}>Product Media</Text>
+    <View style={Layout.tabContent}>
+      <Text style={Components.sectionHeader}>Product Media</Text>
       
       {/* Media 1 */}
-      <View style={styles.mediaRow}>
-        <View style={styles.mediaThumbnailContainer}>
+      <View style={Components.mediaRow}>
+        <View style={Components.mediaThumbnailContainer}>
           {formData.f1 ? (
-            <View style={styles.mediaThumbnail}>
-              <Ionicons name="image" size={24} color="#4a86e8" />
+            <View style={Components.mediaThumbnail}>
+              <Ionicons name="image" size={24} color={Colors.secondary} />
             </View>
           ) : (
-            <View style={styles.emptyMediaThumbnail}>
+            <View style={Components.emptyMediaThumbnail}>
               <Ionicons name="add" size={24} color="#888" />
             </View>
           )}
         </View>
-        <View style={styles.mediaInputContainer}>
-          <Text style={styles.mediaLabel}>Media 1</Text>
+        <View style={Components.mediaInputContainer}>
+          <Text style={Components.mediaLabel}>Media 1</Text>
           <TextInput
-            style={styles.mediaInput}
+            style={Components.mediaInput}
             value={formData.f1}
             onChangeText={(value) => handleInputChange('f1', value)}
             placeholder="Enter media URL"
@@ -458,22 +465,22 @@ function EditProductModal({
       </View>
 
       {/* Media 2 */}
-      <View style={styles.mediaRow}>
-        <View style={styles.mediaThumbnailContainer}>
+      <View style={Components.mediaRow}>
+        <View style={Components.mediaThumbnailContainer}>
           {formData.f2 ? (
-            <View style={styles.mediaThumbnail}>
-              <Ionicons name="image" size={24} color="#4a86e8" />
+            <View style={Components.mediaThumbnail}>
+              <Ionicons name="image" size={24} color={Colors.secondary} />
             </View>
           ) : (
-            <View style={styles.emptyMediaThumbnail}>
+            <View style={Components.emptyMediaThumbnail}>
               <Ionicons name="add" size={24} color="#888" />
             </View>
           )}
         </View>
-        <View style={styles.mediaInputContainer}>
-          <Text style={styles.mediaLabel}>Media 2</Text>
+        <View style={Components.mediaInputContainer}>
+          <Text style={Components.mediaLabel}>Media 2</Text>
           <TextInput
-            style={styles.mediaInput}
+            style={Components.mediaInput}
             value={formData.f2}
             onChangeText={(value) => handleInputChange('f2', value)}
             placeholder="Enter media URL"
@@ -482,22 +489,22 @@ function EditProductModal({
       </View>
 
       {/* Media 3 */}
-      <View style={styles.mediaRow}>
-        <View style={styles.mediaThumbnailContainer}>
+      <View style={Components.mediaRow}>
+        <View style={Components.mediaThumbnailContainer}>
           {formData.f3 ? (
-            <View style={styles.mediaThumbnail}>
-              <Ionicons name="image" size={24} color="#4a86e8" />
+            <View style={Components.mediaThumbnail}>
+              <Ionicons name="image" size={24} color={Colors.secondary} />
             </View>
           ) : (
-            <View style={styles.emptyMediaThumbnail}>
+            <View style={Components.emptyMediaThumbnail}>
               <Ionicons name="add" size={24} color="#888" />
             </View>
           )}
         </View>
-        <View style={styles.mediaInputContainer}>
-          <Text style={styles.mediaLabel}>Media 3</Text>
+        <View style={Components.mediaInputContainer}>
+          <Text style={Components.mediaLabel}>Media 3</Text>
           <TextInput
-            style={styles.mediaInput}
+            style={Components.mediaInput}
             value={formData.f3}
             onChangeText={(value) => handleInputChange('f3', value)}
             placeholder="Enter media URL"
@@ -506,22 +513,22 @@ function EditProductModal({
       </View>
 
       {/* Media 4 */}
-      <View style={styles.mediaRow}>
-        <View style={styles.mediaThumbnailContainer}>
+      <View style={Components.mediaRow}>
+        <View style={Components.mediaThumbnailContainer}>
           {formData.f4 ? (
-            <View style={styles.mediaThumbnail}>
-              <Ionicons name="image" size={24} color="#4a86e8" />
+            <View style={Components.mediaThumbnail}>
+              <Ionicons name="image" size={24} color={Colors.secondary} />
             </View>
           ) : (
-            <View style={styles.emptyMediaThumbnail}>
+            <View style={Components.emptyMediaThumbnail}>
               <Ionicons name="add" size={24} color="#888" />
             </View>
           )}
         </View>
-        <View style={styles.mediaInputContainer}>
-          <Text style={styles.mediaLabel}>Media 4</Text>
+        <View style={Components.mediaInputContainer}>
+          <Text style={Components.mediaLabel}>Media 4</Text>
           <TextInput
-            style={styles.mediaInput}
+            style={Components.mediaInput}
             value={formData.f4}
             onChangeText={(value) => handleInputChange('f4', value)}
             placeholder="Enter media URL"
@@ -530,22 +537,22 @@ function EditProductModal({
       </View>
 
       {/* Media 5 */}
-      <View style={styles.mediaRow}>
-        <View style={styles.mediaThumbnailContainer}>
+      <View style={Components.mediaRow}>
+        <View style={Components.mediaThumbnailContainer}>
           {formData.f5 ? (
-            <View style={styles.mediaThumbnail}>
-              <Ionicons name="image" size={24} color="#4a86e8" />
+            <View style={Components.mediaThumbnail}>
+              <Ionicons name="image" size={24} color={Colors.secondary} />
             </View>
           ) : (
-            <View style={styles.emptyMediaThumbnail}>
+            <View style={Components.emptyMediaThumbnail}>
               <Ionicons name="add" size={24} color="#888" />
             </View>
           )}
         </View>
-        <View style={styles.mediaInputContainer}>
-          <Text style={styles.mediaLabel}>Media 5</Text>
+        <View style={Components.mediaInputContainer}>
+          <Text style={Components.mediaLabel}>Media 5</Text>
           <TextInput
-            style={styles.mediaInput}
+            style={Components.mediaInput}
             value={formData.f5}
             onChangeText={(value) => handleInputChange('f5', value)}
             placeholder="Enter media URL"
@@ -556,11 +563,11 @@ function EditProductModal({
   );
 
   const renderOptionFields = () => (
-    <View style={styles.tabContent}>
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Product Options</Text>
+    <View style={Layout.tabContent}>
+      <View style={Layout.formGroup}>
+        <Text style={Forms.label}>Product Options</Text>
         <TextInput
-          style={[styles.modalInput, styles.textArea]}
+          style={[Forms.modalInput, Forms.textArea]}
           value={formData.options}
           onChangeText={(value) => handleInputChange('options', value)}
           placeholder="Product Options"
@@ -572,46 +579,46 @@ function EditProductModal({
   );
 
   const renderInventoryFields = () => (
-    <View style={styles.tabContent}>
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Linked Inventory Items</Text>
+    <View style={Layout.tabContent}>
+      <View style={Layout.formGroup}>
+        <Text style={Forms.label}>Linked Inventory Items</Text>
         
         {selectedInventoryIds.length > 0 ? (
-          <View style={styles.linkedInventoryList}>
+          <View style={Cards.linkedInventoryList}>
             {selectedInventoryIds.map((invId) => {
               const item = inventoryItems.find(inv => inv.id === invId);
               return (
-                <View key={invId} style={styles.linkedInventoryItem}>
-                  <View style={styles.inventoryItemDetails}>
-                    <Text style={styles.linkedInventoryName}>
+                <View key={invId} style={Cards.linkedInventoryItem}>
+                  <View style={Cards.inventoryItemDetails}>
+                    <Text style={Cards.linkedInventoryName}>
                       {item?.name || item?.sku || 'Unnamed Item'}
                     </Text>
                     {item?.sku && (
-                      <Text style={styles.linkedInventorySku}>SKU: {item.sku}</Text>
+                      <Text style={Cards.linkedInventorySku}>SKU: {item.sku}</Text>
                     )}
                   </View>
                   <TouchableOpacity 
-                    style={styles.unlinkButton}
+                    style={Cards.unlinkButton}
                     onPress={() => toggleInventorySelection(invId)}
                   >
-                    <Ionicons name="close-circle" size={20} color="#ff3b30" />
+                    <Ionicons name="close-circle" size={20} color={Colors.error} />
                   </TouchableOpacity>
                 </View>
               );
             })}
           </View>
         ) : (
-          <View style={styles.noInventoryPlaceholder}>
-            <Text style={styles.placeholderText}>No inventory items linked to this product</Text>
+          <View style={Cards.noInventoryPlaceholder}>
+            <Text style={Typography.placeholderText}>No inventory items linked to this product</Text>
           </View>
         )}
         
         <TouchableOpacity 
-          style={styles.inventoryButtonLarge} 
+          style={Forms.inventoryButtonLarge} 
           onPress={() => setShowInventorySelector(true)}
         >
-          <Ionicons name="link" size={18} color="#4a86e8" style={styles.buttonIcon} />
-          <Text style={styles.inventoryButtonText}>
+          <Ionicons name="link" size={18} color={Colors.secondary} style={Forms.buttonIcon} />
+          <Text style={Forms.inventoryButtonText}>
             {selectedInventoryIds.length > 0 ? 'Manage Inventory Links' : 'Link Inventory Items'}
           </Text>
         </TouchableOpacity>
@@ -620,11 +627,11 @@ function EditProductModal({
   );
 
   const renderAttributeFields = () => (
-    <View style={styles.tabContent}>
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Attributes</Text>
+    <View style={Layout.tabContent}>
+      <View style={Layout.formGroup}>
+        <Text style={Forms.label}>Attributes</Text>
         <TextInput
-          style={[styles.modalInput, styles.textArea]}
+          style={[Forms.modalInput, Forms.textArea]}
           value={formData.attributes}
           onChangeText={(value) => handleInputChange('attributes', value)}
           placeholder="Product Attributes"
@@ -636,11 +643,11 @@ function EditProductModal({
   );
 
   const renderNotesFields = () => (
-    <View style={styles.tabContent}>
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Notes</Text>
+    <View style={Layout.tabContent}>
+      <View style={Layout.formGroup}>
+        <Text style={Forms.label}>Notes</Text>
         <TextInput
-          style={[styles.modalInput, styles.textArea]}
+          style={[Forms.modalInput, Forms.textArea]}
           value={formData.notes}
           onChangeText={(value) => handleInputChange('notes', value)}
           placeholder="Product Notes"
@@ -652,31 +659,31 @@ function EditProductModal({
   );
 
   const renderPublishFields = () => (
-    <View style={styles.tabContent}>
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Tags</Text>
+    <View style={Layout.tabContent}>
+      <View style={Layout.formGroup}>
+        <Text style={Forms.label}>Tags</Text>
         <TextInput
-          style={styles.modalInput}
+          style={Forms.modalInput}
           value={formData.tags}
           onChangeText={(value) => handleInputChange('tags', value)}
           placeholder="Tags (comma separated)"
         />
       </View>
       
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Collection</Text>
+      <View style={Layout.formGroup}>
+        <Text style={Forms.label}>Collection</Text>
         <TextInput
-          style={styles.modalInput}
+          style={Forms.modalInput}
           value={formData.collection}
           onChangeText={(value) => handleInputChange('collection', value)}
           placeholder="Collection"
         />
       </View>
       
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Metadata</Text>
+      <View style={Layout.formGroup}>
+        <Text style={Forms.label}>Metadata</Text>
         <TextInput
-          style={[styles.modalInput, styles.textArea]}
+          style={[Forms.modalInput, Forms.textArea]}
           value={formData.metadata}
           onChangeText={(value) => handleInputChange('metadata', value)}
           placeholder="Product Metadata"
@@ -685,20 +692,20 @@ function EditProductModal({
         />
       </View>
 
-      <View style={styles.formRow}>
-        <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}>
-          <Text style={styles.label}>POS</Text>
+      <View style={Layout.formRow}>
+        <View style={[Layout.formGroup, { flex: 1, marginRight: 8 }]}>
+          <Text style={Forms.label}>POS</Text>
           <TextInput
-            style={styles.modalInput}
+            style={Forms.modalInput}
             value={formData.pos}
             onChangeText={(value) => handleInputChange('pos', value)}
             placeholder="POS Info"
           />
         </View>
-        <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
-          <Text style={styles.label}>Tax</Text>
+        <View style={[Layout.formGroup, { flex: 1, marginLeft: 8 }]}>
+          <Text style={Forms.label}>Tax</Text>
           <TextInput
-            style={styles.modalInput}
+            style={Forms.modalInput}
             value={formData.tax}
             onChangeText={(value) => handleInputChange('tax', value)}
             placeholder="Tax Info"
@@ -706,23 +713,23 @@ function EditProductModal({
         </View>
       </View>
 
-      <View style={styles.switchContainer}>
-        <Text style={styles.label}>Web Visibility</Text>
+      <View style={Layout.switchContainer}>
+        <Text style={Forms.label}>Web Visibility</Text>
         <Switch
           value={!!formData.web}
           onValueChange={(value) => handleInputChange('web', value)}
-          trackColor={{ false: "#dedede", true: "#4a86e8" }}
-          thumbColor={!!formData.web ? "#ffffff" : "#f4f3f4"}
+          trackColor={{ false: "#dedede", true: Colors.secondary }}
+          thumbColor={!!formData.web ? Colors.background : "#f4f3f4"}
         />
       </View>
       
       {/* Delete button in Publish tab */}
       <TouchableOpacity
-        style={styles.deleteButton}
+        style={Forms.deleteButton}
         onPress={handleDelete}
       >
-        <Ionicons name="trash-outline" size={18} color="#fff" style={styles.buttonIcon} />
-        <Text style={styles.deleteButtonText}>Delete Product</Text>
+        <Ionicons name="trash-outline" size={18} color={Colors.background} style={Forms.buttonIcon} />
+        <Text style={Forms.deleteButtonText}>Delete Product</Text>
       </TouchableOpacity>
     </View>
   );
@@ -735,36 +742,36 @@ function EditProductModal({
       animationType="slide"
       onRequestClose={() => onClose()}
     >
-      <SafeAreaView style={styles.editModalContainer}>
+      <SafeAreaView style={Components.editModalContainer}>
         <StatusBar barStyle="dark-content" />
         
         {/* Header */}
-        <View style={styles.editModalHeader}>
+        <View style={Components.editModalHeader}>
           <TouchableOpacity 
-            style={styles.headerButton} 
+            style={Forms.headerButton} 
             onPress={() => onClose()}
           >
-            <Ionicons name="arrow-back" size={24} color="#333" />
+            <Ionicons name="arrow-back" size={24} color={Colors.text.primary} />
           </TouchableOpacity>
-          <Text style={styles.editModalProductTitle} numberOfLines={1} ellipsizeMode="tail">
+          <Text style={Components.editModalProductTitle} numberOfLines={1} ellipsizeMode="tail">
             {product.title}
           </Text>
           <TouchableOpacity 
-            style={styles.headerButton} 
+            style={Forms.headerButton} 
             onPress={handleSave}
           >
-            <Ionicons name="checkmark" size={24} color="#4a86e8" />
+            <Ionicons name="checkmark" size={24} color={Colors.secondary} />
           </TouchableOpacity>
         </View>
 
-        <View style={styles.editModalContentContainer}>
+        <View style={Components.editModalContentContainer}>
           {/* Primary section (top half) */}
-          <View style={styles.editModalPrimary}>
+          <View style={Components.editModalPrimary}>
             <KeyboardAvoidingView 
               behavior={Platform.OS === "ios" ? "padding" : "height"}
               style={{flex: 1}}
             >
-              <ScrollView style={styles.editModalScrollView}>
+              <ScrollView style={Components.editModalScrollView}>
                 {activeTab === 'core' && renderCoreFields()}
                 {activeTab === 'media' && renderMediaFields()}
                 {activeTab === 'option' && renderOptionFields()}
@@ -777,65 +784,65 @@ function EditProductModal({
           </View>
 
           {/* Tab navigation (center) - Updated tab icons */}
-          <View style={styles.tabsContainerWrapper}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsContainer}>
+          <View style={Components.tabsContainerWrapper}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={Components.tabsContainer}>
               <TouchableOpacity 
-                style={[styles.squareTab, activeTab === 'core' && styles.activeSquareTab]} 
+                style={[Components.squareTab, activeTab === 'core' && Components.activeSquareTab]} 
                 onPress={() => setActiveTab('core')}
               >
-                <Text style={[styles.tabLetter, activeTab === 'core' && styles.activeTabLetter]}>C</Text>
+                <Text style={[Components.tabLetter, activeTab === 'core' && Components.activeTabLetter]}>C</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.squareTab, activeTab === 'media' && styles.activeSquareTab]} 
+                style={[Components.squareTab, activeTab === 'media' && Components.activeSquareTab]} 
                 onPress={() => setActiveTab('media')}
               >
-                <Text style={[styles.tabLetter, activeTab === 'media' && styles.activeTabLetter]}>M</Text>
+                <Text style={[Components.tabLetter, activeTab === 'media' && Components.activeTabLetter]}>M</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.squareTab, activeTab === 'option' && styles.activeSquareTab]} 
+                style={[Components.squareTab, activeTab === 'option' && Components.activeSquareTab]} 
                 onPress={() => setActiveTab('option')}
               >
-                <Text style={[styles.tabLetter, activeTab === 'option' && styles.activeTabLetter]}>O</Text>
+                <Text style={[Components.tabLetter, activeTab === 'option' && Components.activeTabLetter]}>O</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.squareTab, activeTab === 'inventory' && styles.activeSquareTab]} 
+                style={[Components.squareTab, activeTab === 'inventory' && Components.activeSquareTab]} 
                 onPress={() => setActiveTab('inventory')}
               >
-                <Text style={[styles.tabLetter, activeTab === 'inventory' && styles.activeTabLetter]}>I</Text>
+                <Text style={[Components.tabLetter, activeTab === 'inventory' && Components.activeTabLetter]}>I</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.squareTab, activeTab === 'attributes' && styles.activeSquareTab]} 
+                style={[Components.squareTab, activeTab === 'attributes' && Components.activeSquareTab]} 
                 onPress={() => setActiveTab('attributes')}
               >
-                <Text style={[styles.tabLetter, activeTab === 'attributes' && styles.activeTabLetter]}>A</Text>
+                <Text style={[Components.tabLetter, activeTab === 'attributes' && Components.activeTabLetter]}>A</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.squareTab, activeTab === 'notes' && styles.activeSquareTab]} 
+                style={[Components.squareTab, activeTab === 'notes' && Components.activeSquareTab]} 
                 onPress={() => setActiveTab('notes')}
               >
-                <Text style={[styles.tabLetter, activeTab === 'notes' && styles.activeTabLetter]}>N</Text>
+                <Text style={[Components.tabLetter, activeTab === 'notes' && Components.activeTabLetter]}>N</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.squareTab, activeTab === 'publish' && styles.activeSquareTab]} 
+                style={[Components.squareTab, activeTab === 'publish' && Components.activeSquareTab]} 
                 onPress={() => setActiveTab('publish')}
               >
                 <Ionicons 
                   name="paper-plane-outline" 
                   size={24} 
-                  color={activeTab === 'publish' ? "#4a86e8" : "#888"} 
+                  color={activeTab === 'publish' ? Colors.secondary : "#888"} 
                 />
               </TouchableOpacity>
             </ScrollView>
           </View>
 
           {/* Secondary section (bottom half) - Removed delete button from here */}
-          <View style={styles.editModalSecondary}>
+          <View style={Components.editModalSecondary}>
             {/* Empty now since delete button was moved */}
           </View>
         </View>
@@ -846,32 +853,32 @@ function EditProductModal({
           transparent={true}
           onRequestClose={() => setShowInventorySelector(false)}
         >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Select Inventory Items</Text>
+          <View style={Components.modalContainer}>
+            <View style={Components.modalContent}>
+              <Text style={Typography.modalTitle}>Select Inventory Items</Text>
               <FlatList
                 data={inventoryItems}
                 keyExtractor={item => item.id}
                 renderItem={({ item }) => (
                   <TouchableOpacity 
                     style={[
-                      styles.inventoryItem,
-                      selectedInventoryIds.includes(item.id) && styles.selectedInventoryItem
+                      Cards.inventoryItem,
+                      selectedInventoryIds.includes(item.id) && Cards.selectedInventoryItem
                     ]}
                     onPress={() => toggleInventorySelection(item.id)}
                   >
-                    <Text style={styles.inventoryName}>{item.name || item.sku || 'Unnamed Item'}</Text>
+                    <Text style={Typography.body}>{item.name || item.sku || 'Unnamed Item'}</Text>
                     {selectedInventoryIds.includes(item.id) && (
-                      <Ionicons name="checkmark" size={20} color="#4a86e8" />
+                      <Ionicons name="checkmark" size={20} color={Colors.secondary} />
                     )}
                   </TouchableOpacity>
                 )}
               />
               <TouchableOpacity 
-                style={styles.closeButton}
+                style={Forms.closeButton}
                 onPress={() => setShowInventorySelector(false)}
               >
-                <Text style={styles.closeButtonText}>Done</Text>
+                <Text style={Forms.closeButtonText}>Done</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -943,63 +950,63 @@ function ProductList({ products, inventoryItems }: { products: Product[], invent
 
   // Render product list
   return (
-    <ScrollView style={styles.list}>
+    <ScrollView style={Layout.fullWidth}>
       {products.map((product) => {
         const linkedInventory = getLinkedInventory(product.id);
         const isExpanded = expandedProductId === product.id;
         
         return (
-          <View key={product.id} style={styles.listItem}>
+          <View key={product.id} style={Cards.productListItem}>
             <TouchableOpacity onPress={() => handleProductPress(product)}>
-              <View style={styles.productHeader}>
-                <Text style={styles.productTitle}>{product.title}</Text>
+              <View style={Cards.productHeader}>
+                <Text style={Typography.productTitle}>{product.title}</Text>
                 <Ionicons 
                   name="create-outline" 
                   size={20} 
-                  color="#4a86e8" 
+                  color={Colors.secondary} 
                 />
               </View>
               
               {product.vendor && (
-                <Text style={styles.productVendor}>{product.vendor}</Text>
+                <Text style={Typography.productVendor}>{product.vendor}</Text>
               )}
               {product.category && (
-                <Text style={styles.productCategory}>{product.category}</Text>
+                <Text style={Typography.productCategory}>{product.category}</Text>
               )}
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={styles.inventoryPreview}
+              style={Cards.inventoryPreview}
               onPress={() => toggleExpand(product.id)}
             >
-              <Text style={styles.inventoryPreviewText}>
+              <Text style={Cards.inventoryPreviewText}>
                 Linked Inventory ({linkedInventory.length})
               </Text>
               <Ionicons 
                 name={isExpanded ? "chevron-up" : "chevron-down"} 
                 size={18} 
-                color="#888" 
+                color={Colors.text.tertiary} 
               />
             </TouchableOpacity>
             
             {isExpanded && (
-              <View style={styles.expandedContent}>
+              <View style={Layout.expandedContent}>
                 {linkedInventory.length > 0 ? (
                   linkedInventory.map(item => (
-                    <View key={item.id} style={styles.inventoryListItem}>
-                      <Text style={styles.inventoryItemName}>
+                    <View key={item.id} style={Cards.inventoryListItem}>
+                      <Text style={Cards.inventoryItemName}>
                         {item.name || item.sku || 'Unnamed Item'}
                       </Text>
                       {item.sku && (
-                        <Text style={styles.inventoryItemSku}>SKU: {item.sku}</Text>
+                        <Text style={Cards.inventoryItemSku}>SKU: {item.sku}</Text>
                       )}
                       {item.qty !== undefined && (
-                        <Text style={styles.inventoryItemQty}>Qty: {item.qty}</Text>
+                        <Text style={Cards.inventoryItemQty}>Qty: {item.qty}</Text>
                       )}
                     </View>
                   ))
                 ) : (
-                  <Text style={styles.noItemsText}>No inventory items linked</Text>
+                  <Text style={Typography.noItemsText}>No inventory items linked</Text>
                 )}
               </View>
             )}
@@ -1019,457 +1026,5 @@ function ProductList({ products, inventoryItems }: { products: Product[], invent
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  },
-  mainContainer: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  },
-  form: {
-    backgroundColor: "#ffffff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-    padding: 16,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 8,
-    marginBottom: 12,
-    overflow: "hidden",
-  },
-  input: {
-    flex: 1,
-    padding: 14,
-    backgroundColor: "#ffffff",
-    fontSize: 16,
-  },
-  createButton: {
-    padding: 14,
-    backgroundColor: "#ffffff",
-    alignItems: "center",
-    justifyContent: "center",
-    borderLeftWidth: 1,
-    borderLeftColor: "#e0e0e0",
-  },
-  inputRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  smallInput: {
-    flex: 0.48,
-    marginRight: 0,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 8,
-  },
-  inventoryButton: {
-    padding: 12,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-  },
-  inventoryButtonText: {
-    color: "#4a86e8",
-    fontWeight: "600",
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  modalContent: {
-    width: "90%",
-    maxHeight: "80%",
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  inventoryItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  selectedInventoryItem: {
-    backgroundColor: "#f0f8ff",
-  },
-  inventoryName: {
-    fontSize: 16,
-  },
-  closeButton: {
-    marginTop: 16,
-    padding: 12,
-    backgroundColor: "#4a86e8",
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  closeButtonText: {
-    color: "#ffffff",
-    fontWeight: "600",
-  },
-  list: {
-    flex: 1,
-  },
-  listItem: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    minHeight: 60,
-  },
-  productHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  productTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 4,
-  },
-  productVendor: {
-    fontSize: 14,
-    color: "#666",
-  },
-  productCategory: {
-    fontSize: 12,
-    color: "#888",
-    marginTop: 2,
-  },
-  expandedContent: {
-    marginTop: 12,
-    padding: 12,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 8,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 8,
-    color: "#555",
-  },
-  inventoryListItem: {
-    padding: 8,
-    marginBottom: 6,
-    borderLeftWidth: 3,
-    borderLeftColor: "#4a86e8",
-    backgroundColor: "#f5f5f5",
-    borderRadius: 4,
-  },
-  inventoryItemName: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  inventoryItemSku: {
-    fontSize: 12,
-    color: "#666",
-  },
-  inventoryItemQty: {
-    fontSize: 12,
-    color: "#666",
-  },
-  noItemsText: {
-    fontStyle: "italic",
-    color: "#999",
-    textAlign: "center",
-    padding: 8,
-  },
-  // Edit Product Modal Styles
-  editModalContainer: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  },
-  editModalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-    backgroundColor: "#ffffff",
-  },
-  headerButton: {
-    padding: 8,
-    width: 40,
-    alignItems: 'center',
-  },
-  editModalProductTitle: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-    textAlign: "left",
-    marginLeft: 8,
-  },
-  editModalContentContainer: {
-    flex: 1,
-    flexDirection: 'column',
-  },
-  tabsContainerWrapper: {
-    paddingVertical: 0,
-    backgroundColor: '#f8f8f8',
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: "#e0e0e0",
-  },
-  tabsContainer: {
-    flexDirection: "row",
-    justifyContent: 'center',
-  },
-  // Updated square tab styles
-  squareTab: {
-    width: 58.5,
-    height: 50,
-    backgroundColor: '#fff',
-    borderRightWidth: 1,
-    borderRightColor: '#e0e0e0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  activeSquareTab: {
-    backgroundColor: '#e6f0ff',
-    // Removed border
-  },
-  tabLetter: {
-    fontSize: 24,
-    fontWeight: "500",
-    color: "#000",
-  },
-  activeTabLetter: {
-    color: "#4a86e8",
-  },
-  // Removed tabCaption and activeTabCaption styles as they're not used anymore
-  editModalPrimary: {
-    flex: 1,
-    borderBottomWidth: 0,
-  },
-  editModalSecondary: {
-    flex: 1,
-    padding: 16,
-  },
-  editModalScrollView: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  tabContent: {
-    paddingVertical: 16,
-  },
-  formGroup: {
-    marginBottom: 16,
-  },
-  formRow: {
-    flexDirection: "row",
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#555",
-    marginBottom: 6,
-  },
-  modalInput: {
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: "#fafafa",
-  },
-  textArea: {
-    minHeight: 100,
-    textAlignVertical: "top",
-  },
-  deleteButton: {
-    backgroundColor: "#ff3b30",
-    borderRadius: 8,
-    padding: 14,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 24,
-  },
-  deleteButtonText: {
-    color: "#ffffff",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  buttonIcon: {
-    marginRight: 8,
-  },
-  inventoryButtonLarge: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    marginTop: 8,
-  },
-  switchContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-    paddingVertical: 8,
-  },
-  inventoryPreview: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    marginTop: 8,
-  },
-  inventoryPreviewText: {
-    fontSize: 14,
-    color: "#4a86e8",
-    fontWeight: "500",
-  },
-  placeholderMedia: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 40,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderStyle: 'dashed',
-  },
-  placeholderText: {
-    marginTop: 10,
-    color: '#888',
-  },
-  addMediaButton: {
-    marginTop: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: '#4a86e8',
-    borderRadius: 20,
-  },
-  addMediaButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  linkedInventoryList: {
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    backgroundColor: '#fafafa',
-  },
-  linkedInventoryItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  inventoryItemDetails: {
-    flex: 1,
-  },
-  linkedInventoryName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-  },
-  linkedInventorySku: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
-  unlinkButton: {
-    padding: 8,
-  },
-  noInventoryPlaceholder: {
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    marginBottom: 16,
-  },
-  sectionHeader: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 16,
-  },
-  mediaRow: {
-    flexDirection: "row",
-    marginBottom: 16,
-    alignItems: "center",
-  },
-  mediaThumbnailContainer: {
-    width: 60,
-    marginRight: 12,
-  },
-  mediaThumbnail: {
-    width: 50,
-    height: 50,
-    backgroundColor: "#e6f0ff",
-    borderRadius: 4,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#4a86e8",
-  },
-  emptyMediaThumbnail: {
-    width: 50,
-    height: 50,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 4,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderStyle: "dashed",
-  },
-  mediaInputContainer: {
-    flex: 1,
-  },
-  mediaLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#555",
-    marginBottom: 4,
-  },
-  mediaInput: {
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 14,
-    backgroundColor: "#fafafa",
-  },
-});
 
 export default App;

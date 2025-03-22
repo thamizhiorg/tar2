@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, FlatList } from "react-native";
+import GlobalStyles, { Layout, Typography, Colors } from "../../styles/globalStyles";
 
 const sampleTasks = [
   { id: '1', title: 'Complete project proposal', status: 'pending' },
@@ -10,13 +11,13 @@ const sampleTasks = [
 export default function TasksScreen() {
   const renderTask = ({ item }) => (
     <View style={styles.taskItem}>
-      <Text style={styles.taskText}>{item.title}</Text>
+      <Text style={Typography.body}>{item.title}</Text>
       <View style={styles.divider} />
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={Layout.container}>
       <FlatList
         data={sampleTasks}
         renderItem={renderTask}
@@ -28,26 +29,19 @@ export default function TasksScreen() {
   );
 }
 
+// Component-specific styles that use global colors
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    padding: 16,
-  },
   list: {
     flex: 1,
     marginTop: 16,
+    paddingHorizontal: 16,
   },
   taskItem: {
     paddingVertical: 16,
   },
-  taskText: {
-    fontSize: 16,
-    color: '#333',
-  },
   divider: {
     height: 1,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: Colors.border.lightest,
     marginTop: 16,
   },
 });

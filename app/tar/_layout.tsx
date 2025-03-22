@@ -1,10 +1,11 @@
 import { Tabs } from "expo-router";
-import { StyleSheet, View, Pressable } from "react-native";
-import { Ionicons, Feather, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
+import { View, Pressable } from "react-native";
+import { Ionicons, Feather, MaterialIcons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
 import HUD from "../../components/HUD";
 import { AgentProvider } from "../../context/AgentContext";
 import * as db from "../utils/db";
+import GlobalStyles, { Layout, Components } from "../../styles/globalStyles";
 
 function TarLayout() {
   const [selectedAgent, setSelectedAgent] = useState("None");
@@ -26,7 +27,7 @@ function TarLayout() {
 
   return (
     <AgentProvider>
-      <View style={styles.container}>
+      <View style={Layout.container}>
         <HUD 
           selectedAgent={selectedAgent}
           setSelectedAgent={setSelectedAgent}
@@ -35,9 +36,9 @@ function TarLayout() {
         />
         <Tabs
           screenOptions={{
-            tabBarActiveTintColor: "#007AFF",
+            tabBarActiveTintColor: GlobalStyles.Colors.primary,
             tabBarInactiveTintColor: "black",
-            tabBarStyle: styles.tabBar,
+            tabBarStyle: Components.tabBar,
             headerShown: false,
             tabBarShowLabel: false, // Hide the labels
             tabBarIconStyle: { marginBottom: 0 }, // Remove padding around icons
@@ -95,26 +96,10 @@ function TarLayout() {
               ),
             }}
           />
-          {/* Removed pages tab */}
         </Tabs>
       </View>
     </AgentProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  tabBar: {
-    height: 60,
-    paddingBottom: 5,
-    paddingTop: 5,
-    elevation: 0, // Remove shadow on Android
-    shadowOpacity: 0, // Remove shadow on iOS
-    borderTopWidth: 0.5,
-    borderTopColor: '#E0E0E0',
-  },
-});
 
 export default TarLayout;
