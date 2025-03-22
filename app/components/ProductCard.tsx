@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, SafeAreaView, Dimensions, BackHandler } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, SafeAreaView, Dimensions, BackHandler, Image } from 'react-native';
 import { InstaQLEntity, init } from "@instantdb/react-native";
 import { AppSchema } from "../../instant.schema";
 
@@ -15,6 +15,16 @@ interface ProductCardProps {
 
 const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => {
   const [activeTab, setActiveTab] = useState('basic');
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // Sample product images (replace with actual product images)
+  const productImages = [
+    'https://via.placeholder.com/150',
+    'https://via.placeholder.com/150/0000FF',
+    'https://via.placeholder.com/150/FF0000',
+    'https://via.placeholder.com/150/00FF00',
+    'https://via.placeholder.com/150/FFFF00',
+  ];
   
   // Add hardware back button handler
   useEffect(() => {
@@ -45,6 +55,10 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
     db.transact(db.tx.products[product.id].update({ [field]: value }));
   };
 
+  const handleImageChange = (index: number) => {
+    setCurrentImageIndex(index);
+  };
+
   const tabs = [
     { id: 'basic', label: 'Basic Info' },
     { id: 'details', label: 'Details' },
@@ -58,31 +72,73 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
         return (
           <View style={styles.tabContent}>
             <View style={styles.card}>
-              <EditableInfoRow 
-                label="Title" 
-                value={product.title} 
-                onChange={(value) => handleInputChange('title', value)} 
-              />
-              <EditableInfoRow 
-                label="Category" 
-                value={product.category} 
-                onChange={(value) => handleInputChange('category', value)} 
-              />
-              <EditableInfoRow 
-                label="Vendor" 
-                value={product.vendor} 
-                onChange={(value) => handleInputChange('vendor', value)} 
-              />
-              <EditableInfoRow 
-                label="Type" 
-                value={product.type} 
-                onChange={(value) => handleInputChange('type', value)} 
-              />
-              <EditableInfoRow 
-                label="Unit" 
-                value={product.unit} 
-                onChange={(value) => handleInputChange('unit', value)} 
-              />
+              <View style={styles.basicInfoHeader}>
+                <TouchableOpacity 
+                  style={styles.imageThumbnail}
+                  onPress={() => setCurrentImageIndex((currentImageIndex + 1) % productImages.length)}
+                >
+                  <Image 
+                    source={{ uri: productImages[currentImageIndex] }} 
+                    style={styles.productImage} 
+                  />
+                  <View style={styles.imageIndicators}>
+                    {productImages.map((_, index) => (
+                      <TouchableOpacity 
+                        key={index} 
+                        style={[
+                          styles.indicator, 
+                          currentImageIndex === index && styles.activeIndicator
+                        ]}
+                        onPress={() => handleImageChange(index)}
+                      >
+                        <Text style={styles.indicatorText}>{index + 1}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </TouchableOpacity>
+                
+                <View style={styles.productTitleContainer}>
+                  <TextInput
+                    style={styles.productTitle}
+                    value={product.title}
+                    onChangeText={(value) => handleInputChange('title', value)}
+                  />
+                  <TextInput
+                    style={styles.productCategory}
+                    value={product.category}
+                    onChangeText={(value) => handleInputChange('category', value)}
+                    placeholder="Category"
+                  />
+                </View>
+              </View>
+              
+              <View style={styles.bottomInfoContainer}>
+                <View style={styles.leftBottomContainer}>
+                  <TextInput
+                    style={styles.bottomInput}
+                    value={product.type}
+                    onChangeText={(value) => handleInputChange('type', value)}
+                    placeholder="Type"
+                  />
+                  <Text style={styles.separator}>•</Text>
+                  <TextInput
+                    style={styles.bottomInput}
+                    value={product.vendor}
+                    onChangeText={(value) => handleInputChange('vendor', value)}
+                    placeholder="Vendor"
+                  />
+                </View>
+                
+                <View style={styles.rightBottomContainer}>
+                  <Text style={styles.quantityValue}>10</Text>
+                  <TextInput
+                    style={styles.quantityUnit}
+                    value={product.unit}
+                    onChangeText={(value) => handleInputChange('unit', value)}
+                    placeholder="Unit"
+                  />
+                </View>
+              </View>
             </View>
           </View>
         );
@@ -205,20 +261,18 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fafafa', // Lighter background
     borderRadius: 8,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
+    // Remove shadow/elevation
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
   },
   infoRow: {
     flexDirection: 'row',
     paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   label: {
     width: 120,
@@ -235,6 +289,109 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
     padding: 4,
+  },
+  basicInfoHeader: {
+    flexDirection: 'row',
+    marginBottom: 15,
+    paddingBottom: 15,
+  },
+  imageThumbnail: {
+    width: 100,
+    height: 100,
+    marginRight: 15,
+    position: 'relative',
+  },
+  productImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+  },
+  imageIndicators: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    position: 'absolute',
+    bottom: -20,
+    left: 0,
+    right: 0,
+  },
+  indicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 0, // Square instead of round
+    backgroundColor: '#fff',
+    marginHorizontal: 0, // No spacing between indicators
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 0.5,
+    borderColor: '#ccc',
+  },
+  activeIndicator: {
+    backgroundColor: '#fff',
+  },
+  indicatorText: {
+    fontSize: 12, // Larger text
+    fontWeight: '500',
+    color: '#333',
+  },
+  productTitleContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  productTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 2, // Reduced space between title and category
+    color: '#333',
+  },
+  productCategory: {
+    fontSize: 14,
+    color: '#999', // Light grey
+    fontWeight: 'bold', // Bold instead of italic
+    fontStyle: 'normal', // Remove italic
+    marginBottom: 5,
+  },
+  productUnit: {
+    fontSize: 12,
+    color: '#888',
+    fontStyle: 'italic',
+  },
+  bottomInfoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  leftBottomContainer: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rightBottomContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  bottomInput: {
+    fontSize: 14,
+    color: '#333',
+    padding: 2,
+    fontWeight: 'bold',
+  },
+  separator: {
+    marginHorizontal: 8,
+    color: '#999',
+  },
+  quantityValue: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#000',
+    marginRight: 4,
+  },
+  quantityUnit: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
   },
 });
 
