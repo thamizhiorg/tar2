@@ -83,7 +83,7 @@ export default function App() {
         const user = await db.getAuth();
         if (user && user.email) {
           // User is authenticated, redirect to the AI screen
-          router.replace("/tar/ai");
+          router.replace("/tar/workspace");
         }
       } catch (error) {
         console.error("Authentication check failed:", error);
@@ -204,7 +204,7 @@ function CodeStep({ sentEmail }: { sentEmail: string }) {
     try {
       await db.auth.signInWithMagicCode({ email: sentEmail, code });
       // Navigate to AI screen on successful verification
-      router.replace("/tar/ai");
+      router.replace("/tar/workspace");
     } catch (err) {
       setCode("");
       alert("Verification failed: " + (err.body?.message || "Invalid code"));

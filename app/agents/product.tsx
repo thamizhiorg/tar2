@@ -17,6 +17,9 @@ function App() {
     products: {}
   });
 
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
   if (isLoading) return <View style={styles.container}><Text>Loading...</Text></View>;
   if (error) return <View style={styles.container}><Text>Error: {error.message}</Text></View>;
 
@@ -31,8 +34,25 @@ function App() {
   return (
     <View style={styles.container}>
       <View style={styles.mainContainer}>
-        <ProductList ondeviceItems={ondeviceItems} productMap={productMap} />
+        <ProductList 
+          ondeviceItems={ondeviceItems} 
+          productMap={productMap}
+          setSelectedProduct={setSelectedProduct}
+          setModalVisible={setModalVisible}
+        />
       </View>
+
+      {modalVisible && selectedProduct && (
+        <View style={styles.modalContainer}>
+          <ProductCard
+            product={selectedProduct}
+            onClose={() => {
+              setModalVisible(false);
+              setSelectedProduct(null);
+            }}
+          />
+        </View>
+      )}
     </View>
   );
 }
@@ -52,19 +72,21 @@ function deleteProduct(product: Product) {
   db.transact(db.tx.products[product.id].delete());
 }
 
-function ProductList({ ondeviceItems, productMap }: { ondeviceItems: OnDevice[], productMap: Record<string, any> }) {
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [modalVisible, setModalVisible] = useState(false);
-
+function ProductList({ 
+  ondeviceItems, 
+  productMap,
+  setSelectedProduct,
+  setModalVisible 
+}: { 
+  ondeviceItems: OnDevice[], 
+  productMap: Record<string, any>,
+  setSelectedProduct: (product: any) => void,
+  setModalVisible: (visible: boolean) => void
+}) {
   const handleProductPress = (ondeviceItem: OnDevice) => {
     const product = productMap[ondeviceItem.pageid];
     setSelectedProduct(product);
     setModalVisible(true);
-  };
-
-  const handleCloseModal = () => {
-    setModalVisible(false);
-    setSelectedProduct(null);
   };
 
   return (
@@ -83,15 +105,6 @@ function ProductList({ ondeviceItems, productMap }: { ondeviceItems: OnDevice[],
           </TouchableOpacity>
         ))}
       </ScrollView>
-
-      {modalVisible && selectedProduct && (
-        <View style={styles.modalContainer}>
-          <ProductCard
-            product={selectedProduct}
-            onClose={handleCloseModal}
-          />
-        </View>
-      )}
     </View>
   );
 }

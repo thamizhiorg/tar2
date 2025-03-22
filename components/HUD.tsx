@@ -12,6 +12,8 @@ interface HUDProps {
   setSelectedAgent: (agent: string) => void;
   showAgentList: boolean;
   setShowAgentList: (show: boolean) => void;
+  selectedProduct?: { title: string } | null;
+  onBackPress?: () => void;
 }
 
 const agentOptions = [
@@ -27,7 +29,14 @@ const agentOptions = [
   '🕹️ AI agent',
 ];
 
-export default function HUD({ selectedAgent, setSelectedAgent, showAgentList, setShowAgentList }: HUDProps) {
+export default function HUD({ 
+  selectedAgent, 
+  setSelectedAgent, 
+  showAgentList, 
+  setShowAgentList,
+  selectedProduct,
+  onBackPress 
+}: HUDProps) {
   const router = useRouter();
   const agentContext = useAgent();
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -91,12 +100,21 @@ export default function HUD({ selectedAgent, setSelectedAgent, showAgentList, se
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.hudContainer}>
-        <TouchableOpacity 
-          style={styles.agentContainer}
-          onPress={handleAgentTap}
-        >
-          <Text style={styles.agentText}>{selectedAgent}</Text>
-        </TouchableOpacity>
+        {selectedProduct ? (
+          <View style={styles.productHeader}>
+            <TouchableOpacity onPress={onBackPress} style={styles.backButton}>
+              <Text style={styles.backButtonText}>←</Text>
+            </TouchableOpacity>
+            <Text style={styles.productTitle}>{selectedProduct.title}</Text>
+          </View>
+        ) : (
+          <TouchableOpacity 
+            style={styles.agentContainer}
+            onPress={handleAgentTap}
+          >
+            <Text style={styles.agentText}>{selectedAgent}</Text>
+          </TouchableOpacity>
+        )}
       </View>
       
       {showAgentList && (
@@ -247,5 +265,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     marginTop: 2,
+  },
+  productHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  backButtonText: {
+    fontSize: 24,
+    color: '#333',
+  },
+  productTitle: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#333',
+    marginLeft: 8,
   },
 });

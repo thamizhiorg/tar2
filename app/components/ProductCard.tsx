@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, SafeAreaView, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, SafeAreaView, Dimensions, BackHandler } from 'react-native';
 import { InstaQLEntity, init } from "@instantdb/react-native";
 import { AppSchema } from "../../instant.schema";
 
@@ -15,6 +15,21 @@ interface ProductCardProps {
 
 const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => {
   const [activeTab, setActiveTab] = useState('basic');
+  
+  // Add hardware back button handler
+  useEffect(() => {
+    const backAction = () => {
+      onClose();
+      return true; // Prevent default behavior
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => backHandler.remove(); // Clean up on unmount
+  }, [onClose]);
   
   // Add real-time subscription to product updates
   const { data } = db.useQuery({
@@ -107,13 +122,6 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{product.title}</Text>
-          <TouchableOpacity onPress={onClose}>
-            <Text style={styles.closeButton}>×</Text>
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.tabs}>
           {tabs.map(tab => (
             <TouchableOpacity
@@ -168,22 +176,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     width: '100%',
     height: Dimensions.get('window').height,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  closeButton: {
-    fontSize: 24,
-    padding: 8,
   },
   tabs: {
     flexDirection: 'row',
