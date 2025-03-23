@@ -16,7 +16,7 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => {
-  const [activeTab, setActiveTab] = useState('basic');
+  const [activeTab, setActiveTab] = useState('core'); // Changed from 'basic' to 'core'
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   
@@ -118,16 +118,17 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
     }
   };
 
+  // Update tab names and IDs
   const tabs = [
-    { id: 'basic', label: 'Basic Info' },
-    { id: 'details', label: 'Details' },
-    { id: 'sales', label: 'Sales' },
-    { id: 'metadata', label: 'Metadata' }
+    { id: 'core', label: 'Core' },
+    { id: 'inventory', label: 'Inventory' },
+    { id: 'notes', label: 'Notes' },
+    { id: 'publish', label: 'Publish' }
   ];
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'basic':
+      case 'core': // Changed from 'basic' to 'core'
         return (
           <View style={styles.tabContent}>
             <View style={styles.card}>
@@ -183,9 +184,7 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
                     onChangeText={(value) => handleInputChange('category', value)}
                     placeholder="Category"
                   />
-                  <Text style={styles.imageHint}>
-                    Tap image to upload • Long press number to change specific image
-                  </Text>
+                  {/* Removed the hint text */}
                 </View>
               </View>
               
@@ -219,7 +218,7 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
             </View>
           </View>
         );
-      case 'details':
+      case 'inventory': // Changed from 'details' to 'inventory'
         return (
           <View style={styles.tabContent}>
             <InfoRow label="Collection" value={product.collection} />
@@ -228,7 +227,7 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
             <InfoRow label="Options" value={product.options} />
           </View>
         );
-      case 'sales':
+      case 'notes': // Changed from 'sales' to 'notes'
         return (
           <View style={styles.tabContent}>
             <InfoRow label="POS" value={product.pos} />
@@ -237,7 +236,7 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
             <InfoRow label="Web Enabled" value={product.web ? 'Yes' : 'No'} />
           </View>
         );
-      case 'metadata':
+      case 'publish': // Changed from 'metadata' to 'publish'
         return (
           <View style={styles.tabContent}>
             <InfoRow label="SEO" value={product.seo} />
