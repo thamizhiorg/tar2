@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, SafeAr
 import { InstaQLEntity, init } from "@instantdb/react-native";
 import { AppSchema } from "../../instant.schema";
 import * as ImagePicker from 'expo-image-picker';
-import { uploadFileWithPresignedUrl, getPresignedUploadUrl, generateUniqueFilename } from '../../utils/s3';
+import { uploadFileWithPresignedUrl, getPresignedUploadUrl, generateUniqueFilename, getPublicUrl } from '../../utils/s3';
 
 const APP_ID = "84f087af-f6a5-4a5f-acbc-bc4008e3a725";
 const db = init({ appId: APP_ID });
@@ -97,8 +97,8 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
       const uploadSuccess = await uploadFileWithPresignedUrl(imageUri, presignedUrl, contentType);
       
       if (uploadSuccess) {
-        // Create public URL and update the product's field based on index
-        const publicUrl = `https://f6d1d15e6f0b37b4b8fcad3c41a7922d.r2.cloudflarestorage.com/tarapp-pqdhr/${uniqueFilename}`;
+        // Use the getPublicUrl helper to generate the proper URL with the Sevalla domain
+        const publicUrl = getPublicUrl(uniqueFilename);
         const fieldName = `f${index + 1}` as keyof Product;
         
         db.transact(db.tx.products[product.id].update({

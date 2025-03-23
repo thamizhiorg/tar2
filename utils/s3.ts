@@ -2,7 +2,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import * as FileSystem from 'expo-file-system';
 
-// R2 Configuration from s3.md
+// Updated storage configuration with correct endpoint
 const config = {
   region: "auto",
   endpoint: "https://f6d1d15e6f0b37b4b8fcad3c41a7922d.r2.cloudflarestorage.com",
@@ -69,11 +69,11 @@ export const uploadFileWithPresignedUrl = async (
 };
 
 /**
- * Generate a public URL for a file in the R2 bucket
+ * Generate a public URL for a file in the storage bucket
  * @param fileName The name of the file
  */
 export const getPublicUrl = (fileName: string): string => {
-  return `${config.endpoint}/${BUCKET_NAME}/${fileName}`;
+  return `https://tarapp-pqdhr.sevalla.storage/${fileName}`;
 };
 
 /**
