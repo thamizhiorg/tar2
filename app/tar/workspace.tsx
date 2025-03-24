@@ -4,6 +4,7 @@ import ProductsComponent from '../agents/products';
 import InventoryComponent from '../agents/inventory';
 import ProductComponent from '../agents/product';
 import SpaceComponent from '../agents/space';
+import SettingsComponent from '../agents/settings';
 import { useAgent } from '../../context/AgentContext';
 import GlobalStyles, { Layout, Typography } from '../../styles/globalStyles';
 
@@ -20,6 +21,8 @@ export default function WorkspacePage() {
       return <ProductComponent />;
     case "🌌 Space":
       return <SpaceComponent />;
+    case "🎮 Settings":
+      return <SettingsComponent />;
     default:
       // If no agent is selected or "Space" is selected, show Space agent
       return <SpaceComponent />;
