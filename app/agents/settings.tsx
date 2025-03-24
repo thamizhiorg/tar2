@@ -11,28 +11,24 @@ const SettingsComponent = () => {
       id: 'attributes',
       title: 'Attributes',
       description: 'Manage options, modifiers, categories, and more',
-      icon: 'list-outline',
-      route: 'Attributes'
+      route: 'settings/attributes'  // Removed the leading slash
     },
     {
       id: 'users',
       title: 'Users',
       description: 'Manage user permissions and roles',
-      icon: 'people-outline',
       route: 'Users'
     },
     {
       id: 'store',
       title: 'Store Settings',
       description: 'Configure your store preferences',
-      icon: 'storefront-outline',
       route: 'StoreSettings'
     },
     {
       id: 'integration',
       title: 'Integrations',
       description: 'Connect with other platforms and services',
-      icon: 'git-network-outline',
       route: 'Integrations'
     }
   ];
@@ -43,11 +39,6 @@ const SettingsComponent = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <Text style={styles.headerSubtitle}>Configure your workspace</Text>
-      </View>
-      
       <ScrollView style={styles.content}>
         <View style={styles.optionsContainer}>
           {settingsOptions.map((option, index) => (
@@ -56,9 +47,6 @@ const SettingsComponent = () => {
                 style={styles.optionItem}
                 onPress={() => navigateTo(option.route)}
               >
-                <View style={styles.optionIconContainer}>
-                  <Ionicons name={option.icon} size={22} color="#007AFF" />
-                </View>
                 <View style={styles.optionContent}>
                   <Text style={styles.optionTitle}>{option.title}</Text>
                 </View>
@@ -78,22 +66,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  header: {
-    padding: 20,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333333',
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#999999',
-    marginTop: 4,
-  },
   content: {
     flex: 1,
   },
@@ -104,15 +76,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
-  },
-  optionIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    backgroundColor: '#F5F9FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
   },
   optionContent: {
     flex: 1,
