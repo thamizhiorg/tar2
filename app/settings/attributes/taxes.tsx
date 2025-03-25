@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { 
   View, 
   Text, 
-  StyleSheet, 
   TouchableOpacity, 
   SafeAreaView, 
   FlatList,
@@ -13,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import attributeStyles from '../../styles/attributeStyles';
 
 const TaxesScreen = () => {
   const router = useRouter();
@@ -149,11 +149,11 @@ const TaxesScreen = () => {
 
   const renderTaxItem = ({ item }) => {
     return (
-      <View style={styles.taxCard}>
-        <View style={styles.taxHeader}>
+      <View style={attributeStyles.taxItem}>
+        <View style={attributeStyles.taxHeader}>
           <View>
-            <Text style={styles.taxName}>{item.name}</Text>
-            <Text style={styles.taxRegion}>{item.region}</Text>
+            <Text style={attributeStyles.itemName}>{item.name}</Text>
+            <Text style={attributeStyles.taxRegion}>{item.region}</Text>
           </View>
           <Switch
             trackColor={{ false: '#E0E0E0', true: '#C5E1FA' }}
@@ -164,45 +164,43 @@ const TaxesScreen = () => {
           />
         </View>
         
-        <View style={styles.taxInfo}>
-          <View style={styles.taxRate}>
-            <Text style={styles.rateValue}>{item.rate}%</Text>
+        <View style={attributeStyles.taxInfo}>
+          <View style={attributeStyles.taxRate}>
+            <Text style={attributeStyles.rateValue}>{item.rate}%</Text>
           </View>
           
           {item.isDefault && (
-            <View style={styles.defaultTag}>
-              <Text style={styles.defaultText}>Default</Text>
+            <View style={attributeStyles.defaultTag}>
+              <Text style={attributeStyles.defaultTagText}>Default</Text>
             </View>
           )}
           
-          <Text style={styles.applicableProducts}>
+          <Text style={attributeStyles.taxApplicable}>
             Applied to: {item.applicableProducts === 'all' ? 'All Products' : 
                         item.applicableProducts === 'categories' ? 'Selected Categories' : 
                         'Selected Products'}
           </Text>
         </View>
         
-        <View style={styles.taxFooter}>
+        <View style={attributeStyles.taxFooter}>
           {!item.isDefault && (
             <TouchableOpacity 
-              style={[styles.defaultButton, !item.active && styles.disabledButton]}
+              style={[attributeStyles.defaultButton, !item.active && attributeStyles.disabledButton]}
               onPress={() => setAsDefault(item.id)}
               disabled={!item.active}
             >
-              <Text style={[styles.defaultButtonText, !item.active && styles.disabledButtonText]}>
-                Set as Default
-              </Text>
+              <Text style={attributeStyles.defaultButtonText}>Set as Default</Text>
             </TouchableOpacity>
           )}
-          <View style={styles.actionButtons}>
+          <View style={attributeStyles.actionButtons}>
             <TouchableOpacity 
-              style={styles.actionButton}
+              style={attributeStyles.actionButton}
               onPress={() => handleEditTax(item)}
             >
               <Ionicons name="create-outline" size={20} color="#555" />
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.actionButton, item.isDefault && styles.disabledAction]}
+              style={[attributeStyles.actionButton, item.isDefault && attributeStyles.disabledAction]}
               onPress={() => handleDeleteTax(item.id)}
               disabled={item.isDefault}
             >
@@ -215,28 +213,28 @@ const TaxesScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={attributeStyles.container}>
+      <View style={attributeStyles.header}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={attributeStyles.backButton}
           onPress={() => router.back()}
         >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Taxes</Text>
+        <Text style={attributeStyles.headerTitle}>Taxes</Text>
         <TouchableOpacity 
-          style={styles.addButton}
+          style={attributeStyles.addButton}
           onPress={handleAddTax}
         >
           <Ionicons name="add" size={24} color="#46BDC6" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={18} color="#999" style={styles.searchIcon} />
+      <View style={attributeStyles.searchContainer}>
+        <View style={attributeStyles.searchBar}>
+          <Ionicons name="search" size={18} color="#999" style={attributeStyles.searchIcon} />
           <TextInput
-            style={styles.searchInput}
+            style={attributeStyles.searchInput}
             placeholder="Search taxes"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -253,8 +251,8 @@ const TaxesScreen = () => {
         data={filteredTaxes}
         renderItem={renderTaxItem}
         keyExtractor={item => item.id}
-        style={styles.taxesList}
-        contentContainerStyle={styles.taxesListContent}
+        style={attributeStyles.listContainer}
+        contentContainerStyle={attributeStyles.listContent}
       />
 
       {/* Edit Tax Modal */}
@@ -264,22 +262,22 @@ const TaxesScreen = () => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit {selectedTax?.name}</Text>
+        <View style={attributeStyles.modalOverlay}>
+          <View style={attributeStyles.modalContent}>
+            <View style={attributeStyles.modalHeader}>
+              <Text style={attributeStyles.modalTitle}>Edit {selectedTax?.name}</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <Ionicons name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.modalDescription}>
+            <Text style={attributeStyles.modalDescription}>
               This is where you would edit the tax rate details.
             </Text>
             <TouchableOpacity 
-              style={styles.modalButton}
+              style={[attributeStyles.modalButton, attributeStyles.themeColorTax]}
               onPress={() => setModalVisible(false)}
             >
-              <Text style={styles.modalButtonText}>Close</Text>
+              <Text style={attributeStyles.modalButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -287,192 +285,5 @@ const TaxesScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F8FA',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  backButton: {
-    padding: 4,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  addButton: {
-    padding: 4,
-  },
-  searchContainer: {
-    padding: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
-    backgroundColor: '#FFFFFF',
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 40,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    fontSize: 15,
-    color: '#333',
-  },
-  taxesList: {
-    flex: 1,
-  },
-  taxesListContent: {
-    padding: 16,
-  },
-  taxCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  taxHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  taxName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  taxRegion: {
-    fontSize: 13,
-    color: '#777',
-    marginTop: 2,
-  },
-  taxInfo: {
-    marginBottom: 12,
-  },
-  taxRate: {
-    marginBottom: 8,
-  },
-  rateValue: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#46BDC6',
-  },
-  defaultTag: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#E0F7F9',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginBottom: 8,
-  },
-  defaultText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#46BDC6',
-  },
-  applicableProducts: {
-    fontSize: 13,
-    color: '#666',
-  },
-  taxFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  defaultButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: '#E0F7F9',
-    borderRadius: 4,
-  },
-  defaultButtonText: {
-    fontSize: 13,
-    color: '#46BDC6',
-    fontWeight: '500',
-  },
-  disabledButton: {
-    backgroundColor: '#F5F5F5',
-  },
-  disabledButtonText: {
-    color: '#AAAAAA',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-  },
-  actionButton: {
-    padding: 4,
-    marginLeft: 8,
-  },
-  disabledAction: {
-    opacity: 0.5,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalDescription: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 24,
-  },
-  modalButton: {
-    backgroundColor: '#46BDC6',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  modalButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-});
 
 export default TaxesScreen;

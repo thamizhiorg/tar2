@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { 
   View, 
   Text, 
-  StyleSheet, 
   TouchableOpacity, 
   SafeAreaView, 
   FlatList,
@@ -13,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import attributeStyles from '../../styles/attributeStyles';
 
 const UnitsScreen = () => {
   const router = useRouter();
@@ -126,13 +126,13 @@ const UnitsScreen = () => {
   const renderUnitItem = ({ item }) => {
     return (
       <TouchableOpacity 
-        style={styles.unitCard}
+        style={attributeStyles.unitItem}
         onPress={() => handleEditUnit(item)}
       >
-        <View style={styles.unitHeader}>
-          <View style={styles.unitNameContainer}>
-            <Text style={styles.unitName}>{item.name}</Text>
-            <Text style={styles.unitAbbreviation}>({item.abbreviation})</Text>
+        <View style={attributeStyles.unitHeader}>
+          <View style={attributeStyles.unitNameContainer}>
+            <Text style={attributeStyles.itemName}>{item.name}</Text>
+            <Text style={attributeStyles.unitAbbreviation}>({item.abbreviation})</Text>
           </View>
           <Switch
             trackColor={{ false: '#E0E0E0', true: '#C2E7FF' }}
@@ -143,28 +143,28 @@ const UnitsScreen = () => {
           />
         </View>
         
-        <View style={styles.unitInfo}>
+        <View style={attributeStyles.unitInfo}>
           {item.isBase ? (
-            <View style={styles.baseUnitTag}>
-              <Text style={styles.baseUnitText}>Base Unit</Text>
+            <View style={attributeStyles.baseUnitTag}>
+              <Text style={attributeStyles.baseUnitText}>Base Unit</Text>
             </View>
           ) : (
-            <Text style={styles.conversionText}>
+            <Text style={attributeStyles.conversionText}>
               1 {item.abbreviation} = {item.conversionFactor} {units.find(u => u.name === item.baseUnit)?.abbreviation || ''}
             </Text>
           )}
         </View>
         
-        <View style={styles.unitFooter}>
-          <View style={styles.actionButtons}>
+        <View style={attributeStyles.unitFooter}>
+          <View style={attributeStyles.actionButtons}>
             <TouchableOpacity 
-              style={styles.actionButton}
+              style={attributeStyles.actionButton}
               onPress={() => handleEditUnit(item)}
             >
               <Ionicons name="create-outline" size={20} color="#555" />
             </TouchableOpacity>
             <TouchableOpacity 
-              style={styles.actionButton}
+              style={attributeStyles.actionButton}
               onPress={() => handleDeleteUnit(item.id)}
             >
               <Ionicons name="trash-outline" size={20} color="#FF4949" />
@@ -176,28 +176,28 @@ const UnitsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={attributeStyles.container}>
+      <View style={attributeStyles.header}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={attributeStyles.backButton}
           onPress={() => router.back()}
         >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Units</Text>
+        <Text style={attributeStyles.headerTitle}>Units</Text>
         <TouchableOpacity 
-          style={styles.addButton}
+          style={attributeStyles.addButton}
           onPress={handleAddUnit}
         >
           <Ionicons name="add" size={24} color="#34A853" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={18} color="#999" style={styles.searchIcon} />
+      <View style={attributeStyles.searchContainer}>
+        <View style={attributeStyles.searchBar}>
+          <Ionicons name="search" size={18} color="#999" style={attributeStyles.searchIcon} />
           <TextInput
-            style={styles.searchInput}
+            style={attributeStyles.searchInput}
             placeholder="Search units"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -214,8 +214,8 @@ const UnitsScreen = () => {
         data={filteredUnits}
         renderItem={renderUnitItem}
         keyExtractor={item => item.id}
-        style={styles.unitsList}
-        contentContainerStyle={styles.unitsListContent}
+        style={attributeStyles.listContainer}
+        contentContainerStyle={attributeStyles.listContent}
       />
 
       {/* Edit Unit Modal */}
@@ -225,22 +225,22 @@ const UnitsScreen = () => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit {selectedUnit?.name}</Text>
+        <View style={attributeStyles.modalOverlay}>
+          <View style={attributeStyles.modalContent}>
+            <View style={attributeStyles.modalHeader}>
+              <Text style={attributeStyles.modalTitle}>Edit {selectedUnit?.name}</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <Ionicons name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.modalDescription}>
+            <Text style={attributeStyles.modalDescription}>
               This is where you would edit the unit details.
             </Text>
             <TouchableOpacity 
-              style={styles.modalButton}
+              style={[attributeStyles.modalButton, attributeStyles.themeColorUnit]}
               onPress={() => setModalVisible(false)}
             >
-              <Text style={styles.modalButtonText}>Close</Text>
+              <Text style={attributeStyles.modalButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -248,166 +248,5 @@ const UnitsScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F8FA',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  backButton: {
-    padding: 4,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  addButton: {
-    padding: 4,
-  },
-  searchContainer: {
-    padding: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
-    backgroundColor: '#FFFFFF',
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 40,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    fontSize: 15,
-    color: '#333',
-  },
-  unitsList: {
-    flex: 1,
-  },
-  unitsListContent: {
-    padding: 16,
-  },
-  unitCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  unitHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  unitNameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  unitName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  unitAbbreviation: {
-    fontSize: 14,
-    color: '#666',
-    marginLeft: 8,
-  },
-  unitInfo: {
-    marginBottom: 12,
-  },
-  baseUnitTag: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#E6F4EA',
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  baseUnitText: {
-    fontSize: 12,
-    color: '#34A853',
-    fontWeight: '500',
-  },
-  conversionText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  unitFooter: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-  },
-  actionButton: {
-    padding: 4,
-    marginLeft: 8,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalDescription: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 24,
-  },
-  modalButton: {
-    backgroundColor: '#34A853',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  modalButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-});
 
 export default UnitsScreen;

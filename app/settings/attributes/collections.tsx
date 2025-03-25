@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { 
   View, 
   Text, 
-  StyleSheet, 
   TouchableOpacity, 
   SafeAreaView, 
   FlatList,
@@ -14,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import attributeStyles from '../../styles/attributeStyles';
 
 const CollectionsScreen = () => {
   const router = useRouter();
@@ -121,24 +121,20 @@ const CollectionsScreen = () => {
 
   const renderCollectionItem = ({ item }) => {
     return (
-      <View style={styles.collectionCard}>
-        <View style={styles.collectionHeader}>
+      <View style={attributeStyles.collectionItem}>
+        <View style={attributeStyles.collectionHeader}>
           <Image 
             source={{ uri: item.image }} 
-            style={styles.collectionImage} 
+            style={attributeStyles.collectionImage} 
           />
-          <View style={styles.collectionInfo}>
-            <Text style={styles.collectionName}>{item.name}</Text>
-            <Text style={styles.collectionDescription}>{item.description}</Text>
-            <View style={styles.collectionMeta}>
-              <View style={styles.metaItem}>
-                <Ionicons name="pricetag-outline" size={14} color="#777" />
-                <Text style={styles.metaText}>{item.productCount} Products</Text>
-              </View>
-              <View style={styles.metaItem}>
-                <Ionicons name="arrow-up" size={14} color="#777" />
-                <Text style={styles.metaText}>Priority: {item.priority}</Text>
-              </View>
+          <View style={attributeStyles.collectionInfo}>
+            <Text style={attributeStyles.itemName}>{item.name}</Text>
+            <Text style={attributeStyles.collectionDescription}>{item.description}</Text>
+            <View style={attributeStyles.metaItem}>
+              <Ionicons name="pricetag-outline" size={14} color="#777" />
+              <Text style={attributeStyles.metaText}>{item.productCount} Products</Text>
+              <Ionicons name="arrow-up" size={14} color="#777" />
+              <Text style={attributeStyles.metaText}>Priority: {item.priority}</Text>
             </View>
           </View>
           <Switch
@@ -157,15 +153,15 @@ const CollectionsScreen = () => {
           >
             <Text style={styles.manageButtonText}>Manage Products</Text>
           </TouchableOpacity>
-          <View style={styles.actionButtons}>
+          <View style={attributeStyles.actionButtons}>
             <TouchableOpacity 
-              style={styles.actionButton}
+              style={attributeStyles.actionButton}
               onPress={() => handleEditCollection(item)}
             >
               <Ionicons name="create-outline" size={20} color="#555" />
             </TouchableOpacity>
             <TouchableOpacity 
-              style={styles.actionButton}
+              style={attributeStyles.actionButton}
               onPress={() => handleDeleteCollection(item.id)}
             >
               <Ionicons name="trash-outline" size={20} color="#FF4949" />
@@ -177,28 +173,28 @@ const CollectionsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={attributeStyles.container}>
+      <View style={attributeStyles.header}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={attributeStyles.backButton}
           onPress={() => router.back()}
         >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Collections</Text>
+        <Text style={attributeStyles.headerTitle}>Collections</Text>
         <TouchableOpacity 
-          style={styles.addButton}
+          style={attributeStyles.addButton}
           onPress={handleAddCollection}
         >
           <Ionicons name="add" size={24} color="#8F57EB" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={18} color="#999" style={styles.searchIcon} />
+      <View style={attributeStyles.searchContainer}>
+        <View style={attributeStyles.searchBar}>
+          <Ionicons name="search" size={18} color="#999" style={attributeStyles.searchIcon} />
           <TextInput
-            style={styles.searchInput}
+            style={attributeStyles.searchInput}
             placeholder="Search collections"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -215,8 +211,8 @@ const CollectionsScreen = () => {
         data={filteredCollections}
         renderItem={renderCollectionItem}
         keyExtractor={item => item.id}
-        style={styles.collectionsList}
-        contentContainerStyle={styles.collectionsListContent}
+        style={attributeStyles.listContainer}
+        contentContainerStyle={attributeStyles.listContent}
       />
 
       {/* Edit Collection Modal */}
@@ -226,22 +222,22 @@ const CollectionsScreen = () => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit {selectedCollection?.name}</Text>
+        <View style={attributeStyles.modalOverlay}>
+          <View style={attributeStyles.modalContent}>
+            <View style={attributeStyles.modalHeader}>
+              <Text style={attributeStyles.modalTitle}>Edit {selectedCollection?.name}</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <Ionicons name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.modalDescription}>
+            <Text style={attributeStyles.modalDescription}>
               This is where you would edit the collection details.
             </Text>
             <TouchableOpacity 
-              style={styles.modalButton}
+              style={[attributeStyles.modalButton, attributeStyles.themeColorCollection]}
               onPress={() => setModalVisible(false)}
             >
-              <Text style={styles.modalButtonText}>Close</Text>
+              <Text style={attributeStyles.modalButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -249,179 +245,5 @@ const CollectionsScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F8FA',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  backButton: {
-    padding: 4,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  addButton: {
-    padding: 4,
-  },
-  searchContainer: {
-    padding: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
-    backgroundColor: '#FFFFFF',
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 40,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    fontSize: 15,
-    color: '#333',
-  },
-  collectionsList: {
-    flex: 1,
-  },
-  collectionsListContent: {
-    padding: 16,
-  },
-  collectionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  collectionHeader: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  collectionImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 16,
-  },
-  collectionInfo: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  collectionName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  collectionDescription: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 8,
-  },
-  collectionMeta: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  metaText: {
-    fontSize: 12,
-    color: '#777',
-    marginLeft: 4,
-  },
-  collectionFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  manageButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: '#F2EDFB',
-    borderRadius: 4,
-  },
-  manageButtonText: {
-    fontSize: 13,
-    color: '#8F57EB',
-    fontWeight: '500',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  actionButton: {
-    padding: 4,
-    marginLeft: 8,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalDescription: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 24,
-  },
-  modalButton: {
-    backgroundColor: '#8F57EB',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  modalButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-});
 
 export default CollectionsScreen;

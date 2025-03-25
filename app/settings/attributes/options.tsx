@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { 
   View, 
   Text, 
-  StyleSheet, 
   TouchableOpacity, 
   SafeAreaView, 
   FlatList,
@@ -12,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import attributeStyles from '../../styles/attributeStyles';
 
 const OptionsScreen = () => {
   const router = useRouter();
@@ -82,63 +82,63 @@ const OptionsScreen = () => {
   const renderOptionItem = ({ item }) => {
     return (
       <TouchableOpacity 
-        style={styles.optionCard}
+        style={attributeStyles.optionItem}
         onPress={() => handleEditOption(item)}
       >
-        <View style={styles.optionHeader}>
-          <Text style={styles.optionName}>{item.name}</Text>
-          <View style={styles.actionButtons}>
+        <View style={attributeStyles.itemHeader}>
+          <Text style={attributeStyles.itemName}>{item.name}</Text>
+          <View style={attributeStyles.actionButtons}>
             <TouchableOpacity 
-              style={styles.actionButton}
+              style={attributeStyles.actionButton}
               onPress={() => handleEditOption(item)}
             >
               <Ionicons name="create-outline" size={20} color="#555" />
             </TouchableOpacity>
             <TouchableOpacity 
-              style={styles.actionButton}
+              style={attributeStyles.actionButton}
               onPress={() => handleDeleteOption(item.id)}
             >
               <Ionicons name="trash-outline" size={20} color="#FF4949" />
             </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.optionValues}>
+        <View style={attributeStyles.optionValues}>
           {item.values.map((value, index) => (
-            <View key={index} style={styles.valueChip}>
-              <Text style={styles.valueText}>{value}</Text>
+            <View key={index} style={attributeStyles.valueChip}>
+              <Text style={attributeStyles.valueText}>{value}</Text>
             </View>
           ))}
         </View>
-        <View style={styles.optionFooter}>
-          <Text style={styles.optionType}>Type: {item.type.replace('_', ' ')}</Text>
+        <View style={attributeStyles.itemFooter}>
+          <Text style={attributeStyles.optionType}>Type: {item.type.replace('_', ' ')}</Text>
         </View>
       </TouchableOpacity>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={attributeStyles.container}>
+      <View style={attributeStyles.header}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={attributeStyles.backButton}
           onPress={() => router.back()}
         >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Options</Text>
+        <Text style={attributeStyles.headerTitle}>Options</Text>
         <TouchableOpacity 
-          style={styles.addButton}
+          style={attributeStyles.addButton}
           onPress={handleAddOption}
         >
           <Ionicons name="add" size={24} color="#4285F4" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={18} color="#999" style={styles.searchIcon} />
+      <View style={attributeStyles.searchContainer}>
+        <View style={attributeStyles.searchBar}>
+          <Ionicons name="search" size={18} color="#999" style={attributeStyles.searchIcon} />
           <TextInput
-            style={styles.searchInput}
+            style={attributeStyles.searchInput}
             placeholder="Search options"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -155,8 +155,8 @@ const OptionsScreen = () => {
         data={filteredOptions}
         renderItem={renderOptionItem}
         keyExtractor={item => item.id}
-        style={styles.optionsList}
-        contentContainerStyle={styles.optionsListContent}
+        style={attributeStyles.listContainer}
+        contentContainerStyle={attributeStyles.listContent}
       />
 
       {/* Edit Option Modal */}
@@ -166,22 +166,22 @@ const OptionsScreen = () => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit {selectedOption?.name}</Text>
+        <View style={attributeStyles.modalOverlay}>
+          <View style={attributeStyles.modalContent}>
+            <View style={attributeStyles.modalHeader}>
+              <Text style={attributeStyles.modalTitle}>Edit {selectedOption?.name}</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <Ionicons name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.modalDescription}>
+            <Text style={attributeStyles.modalDescription}>
               This is where you would edit the option details.
             </Text>
             <TouchableOpacity 
-              style={styles.modalButton}
+              style={[attributeStyles.modalButton, attributeStyles.themeColorOption]}
               onPress={() => setModalVisible(false)}
             >
-              <Text style={styles.modalButtonText}>Close</Text>
+              <Text style={attributeStyles.modalButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -189,159 +189,5 @@ const OptionsScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F8FA',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  backButton: {
-    padding: 4,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  addButton: {
-    padding: 4,
-  },
-  searchContainer: {
-    padding: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
-    backgroundColor: '#FFFFFF',
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 40,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    fontSize: 15,
-    color: '#333',
-  },
-  optionsList: {
-    flex: 1,
-  },
-  optionsListContent: {
-    padding: 16,
-  },
-  optionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  optionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  optionName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-  },
-  actionButton: {
-    padding: 4,
-    marginLeft: 8,
-  },
-  optionValues: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 8,
-  },
-  valueChip: {
-    backgroundColor: '#F0F4FF',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  valueText: {
-    fontSize: 14,
-    color: '#4285F4',
-  },
-  optionFooter: {
-    marginTop: 4,
-  },
-  optionType: {
-    fontSize: 13,
-    color: '#777',
-    textTransform: 'capitalize',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  modalDescription: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 24,
-  },
-  modalButton: {
-    backgroundColor: '#4285F4',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  modalButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-});
 
 export default OptionsScreen;
