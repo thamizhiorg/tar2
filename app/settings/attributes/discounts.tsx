@@ -125,17 +125,17 @@ const DiscountsScreen = () => {
     const hasStarted = !item.startDate || new Date(item.startDate) <= new Date();
     
     return (
-      <View style={attributeStyles.discountItem}>
-        <View style={attributeStyles.discountHeader}>
+      <View style={[attributeStyles.discountItem, { padding: 16, marginBottom: 12 }]}>
+        <View style={[attributeStyles.discountHeader, { marginBottom: 12 }]}>
           <View>
             <Text style={attributeStyles.itemName}>{item.name}</Text>
-            <Text style={attributeStyles.discountValue}>
+            <Text style={attributeStyles.itemDescription}>
               {item.type === 'percentage' ? `${item.value}% off` : `$${item.value} off`}
             </Text>
           </View>
           <Switch
-            trackColor={{ false: '#E0E0E0', true: '#FFE6E6' }}
-            thumbColor={item.active ? '#FF6B6B' : '#BBBBBB'}
+            trackColor={{ false: '#E0E0E0', true: '#E8E2F7' }}
+            thumbColor={item.active ? '#8F57EB' : '#BBBBBB'}
             ios_backgroundColor="#E0E0E0"
             onValueChange={() => toggleDiscountActive(item.id)}
             value={item.active}
@@ -151,32 +151,32 @@ const DiscountsScreen = () => {
             </View>
           )}
           
-          <View style={attributeStyles.discountTags}>
+          <View style={attributeStyles.statusTags}>
             {isExpired && (
-              <View style={[attributeStyles.statusTag, attributeStyles.expiredTag]}>
-                <Text style={attributeStyles.expiredText}>Expired</Text>
+              <View style={[attributeStyles.statusTag, attributeStyles.errorTag]}>
+                <Text style={attributeStyles.statusText}>Expired</Text>
               </View>
             )}
             {!hasStarted && (
-              <View style={[attributeStyles.statusTag, attributeStyles.scheduledTag]}>
-                <Text style={attributeStyles.scheduledText}>Scheduled</Text>
+              <View style={[attributeStyles.statusTag, attributeStyles.warningTag]}>
+                <Text style={attributeStyles.statusText}>Scheduled</Text>
               </View>
             )}
             {item.minimumPurchase > 0 && (
-              <View style={[attributeStyles.statusTag, attributeStyles.minimumTag]}>
-                <Text style={attributeStyles.minimumText}>
+              <View style={[attributeStyles.statusTag, attributeStyles.infoTag]}>
+                <Text style={attributeStyles.statusText}>
                   Min. ${item.minimumPurchase}
                 </Text>
               </View>
             )}
           </View>
 
-          <Text style={attributeStyles.discountApplicable}>
+          <Text style={attributeStyles.itemDescription}>
             Applies to: {getApplicableToText(item.applicableTo)}
           </Text>
         </View>
 
-        <View style={attributeStyles.actionFooter}>
+        <View style={attributeStyles.itemFooter}>
           <View style={attributeStyles.actionButtons}>
             <TouchableOpacity 
               style={attributeStyles.actionButton}

@@ -121,8 +121,8 @@ const CollectionsScreen = () => {
 
   const renderCollectionItem = ({ item }) => {
     return (
-      <View style={attributeStyles.collectionItem}>
-        <View style={attributeStyles.collectionHeader}>
+      <View style={[attributeStyles.collectionItem, { padding: 16, marginBottom: 12 }]}>
+        <View style={[attributeStyles.collectionHeader, { marginBottom: 12 }]}>
           <Image 
             source={{ uri: item.image }} 
             style={attributeStyles.collectionImage} 
@@ -146,12 +146,12 @@ const CollectionsScreen = () => {
           />
         </View>
         
-        <View style={styles.collectionFooter}>
+        <View style={attributeStyles.collectionFooter}>
           <TouchableOpacity 
-            style={styles.manageButton}
+            style={attributeStyles.manageButton}
             onPress={() => handleManageProducts(item)}
           >
-            <Text style={styles.manageButtonText}>Manage Products</Text>
+            <Text style={attributeStyles.manageButtonText}>Manage Products</Text>
           </TouchableOpacity>
           <View style={attributeStyles.actionButtons}>
             <TouchableOpacity 

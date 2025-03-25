@@ -121,7 +121,7 @@ const CategoriesScreen = () => {
           </View>
           <View style={attributeStyles.actionButtons}>
             <TouchableOpacity 
-              style={[attributeStyles.statusTag, item.active ? attributeStyles.themeColorCategory : styles.inactiveButton]}
+              style={[attributeStyles.statusTag, item.active ? attributeStyles.activeTag : attributeStyles.inactiveTag]}
               onPress={() => toggleCategoryActive(item.id)}
             >
               <Text style={attributeStyles.statusText}>

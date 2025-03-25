@@ -19,7 +19,8 @@ const AttributesScreen = () => {
     { id: 'units', label: 'Units' },
     { id: 'discounts', label: 'Discounts' },
     { id: 'taxes', label: 'Taxes' },
-    { id: 'collections', label: 'Collections' }
+    { id: 'collections', label: 'Collections' },
+    { id: 'custom', label: 'Custom' }
   ];
 
   const navigateToAttributeType = (attributeType) => {
