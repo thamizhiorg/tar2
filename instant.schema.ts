@@ -11,6 +11,11 @@ const _schema = i.schema({
     $users: i.entity({
       email: i.string().unique().indexed(),
     }),
+    category: i.entity({
+      image: i.string(),
+      parentid: i.string(),
+      title: i.string(),
+    }),
     inventory: i.entity({
       available: i.number(),
       committed: i.number(),
@@ -73,6 +78,18 @@ const _schema = i.schema({
     }),
   },
   links: {
+    categoryInventory: {
+      forward: {
+        on: "category",
+        has: "many",
+        label: "inventory",
+      },
+      reverse: {
+        on: "inventory",
+        has: "many",
+        label: "category",
+      },
+    },
     inventoryProduct: {
       forward: {
         on: "inventory",
