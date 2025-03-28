@@ -150,19 +150,7 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
             <View style={styles.card}>
               <View style={styles.bottomInfoContainer}>
                 <View style={styles.leftBottomContainer}>
-                  <TextInput
-                    style={styles.bottomInput}
-                    value={product.type}
-                    onChangeText={(value) => handleInputChange('type', value)}
-                    placeholder="Type"
-                  />
-                  <Text style={styles.separator}>•</Text>
-                  <TextInput
-                    style={styles.bottomInput}
-                    value={product.vendor}
-                    onChangeText={(value) => handleInputChange('vendor', value)}
-                    placeholder="Vendor"
-                  />
+                  {/* Type and Vendor fields removed */}
                 </View>
                 
                 <View style={styles.rightBottomContainer}>
@@ -179,28 +167,28 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
             
             {/* Inventory Items List */}
             <View style={styles.inventorySection}>
-              <Text style={styles.inventorySectionTitle}>Inventory Items</Text>
-              
               {inventoryItems.length === 0 ? (
                 <Text style={styles.noInventoryText}>No inventory items associated with this product</Text>
               ) : (
-                <View style={styles.inventoryList}>
-                  <View style={styles.inventoryHeader}>
-                    <Text style={styles.inventoryHeaderCell}>SKU</Text>
-                    <Text style={styles.inventoryHeaderCell}>Name</Text>
-                    <Text style={styles.inventoryHeaderCell}>Available</Text>
-                    <Text style={styles.inventoryHeaderCell}>Location</Text>
-                  </View>
-                  
+                <ScrollView style={styles.inventoryList}>
                   {inventoryItems.map((item) => (
-                    <View key={item.id} style={styles.inventoryRow}>
-                      <Text style={styles.inventoryCell} numberOfLines={1}>{item.sku || '-'}</Text>
-                      <Text style={styles.inventoryCell} numberOfLines={1}>{item.name || '-'}</Text>
-                      <Text style={styles.inventoryCell}>{item.available || 0}</Text>
-                      <Text style={styles.inventoryCell} numberOfLines={1}>{item.location || '-'}</Text>
+                    <View key={item.id} style={styles.inventoryItem}>
+                      <View style={styles.inventoryItemHeader}>
+                        <View style={styles.inventoryItemNameContainer}>
+                          <Text style={styles.inventoryItemName}>{item.name || 'Unnamed Item'}</Text>
+                          {item.sku && <Text style={styles.inventoryItemSku}>SKU: {item.sku}</Text>}
+                        </View>
+                        <Text style={styles.inventoryItemAvailable}>{item.available || 0}</Text>
+                      </View>
+                      {item.location && (
+                        <View style={styles.inventoryItemDetail}>
+                          <Text style={styles.inventoryItemDetailLabel}>Location:</Text>
+                          <Text style={styles.inventoryItemDetailValue}>{item.location}</Text>
+                        </View>
+                      )}
                     </View>
                   ))}
-                </View>
+                </ScrollView>
               )}
             </View>
           </View>
@@ -570,33 +558,51 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   inventoryList: {
-    borderWidth: 1,
-    borderColor: '#eee',
-    borderRadius: 8,
-    overflow: 'hidden',
+    // Remove border and border radius
   },
-  inventoryHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#f5f5f5',
-    paddingVertical: 8,
+  inventoryItem: {
+    paddingVertical: 10,
     paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
-  inventoryHeaderCell: {
+  inventoryItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  inventoryItemNameContainer: {
     flex: 1,
+  },
+  inventoryItemName: {
+    fontSize: 16,
     fontWeight: 'bold',
-    fontSize: 13,
+    color: '#333',
+  },
+  inventoryItemSku: {
+    fontSize: 12,
     color: '#666',
   },
-  inventoryRow: {
-    flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+  inventoryItemAvailable: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000',
   },
-  inventoryCell: {
-    flex: 1,
-    fontSize: 13,
+  inventoryItemDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  inventoryItemDetail: {
+    flexDirection: 'row',
+  },
+  inventoryItemDetailLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginRight: 5,
+  },
+  inventoryItemDetailValue: {
+    fontSize: 14,
     color: '#333',
   },
   noInventoryText: {
