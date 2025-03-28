@@ -9,6 +9,7 @@ const APP_ID = "84f087af-f6a5-4a5f-acbc-bc4008e3a725";
 const db = init({ appId: APP_ID });
 
 type Product = InstaQLEntity<AppSchema, "products">;
+type Inventory = InstaQLEntity<AppSchema, "inventory">;
 
 interface ProductCardProps {
   product: Product;
@@ -35,15 +36,31 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
     return () => backHandler.remove(); // Clean up on unmount
   }, [onClose]);
   
-  // Add real-time subscription to product updates
-  const { data } = db.useQuery({
+  // Use the correct association query syntax based on the InstantDB documentation
+  const { data, error } = db.useQuery({
     products: {
       $: { where: { id: initialProduct.id } },
-    },
+      inventory: {},  // This fetches the associated inventory items through the relation
+    }
   });
 
-  // Merge real-time data with initial product data
+  // Log any query errors
+  useEffect(() => {
+    if (error) {
+      console.error("Query error:", error);
+    }
+  }, [error]);
+
+  // Get the product with its associated inventory items
   const product = data?.products?.[0] || initialProduct;
+  const inventoryItems = product?.inventory || [];
+  
+  // Add logging to debug inventory data
+  useEffect(() => {
+    console.log("Product ID:", initialProduct.id);
+    console.log("Product data:", product);
+    console.log("Inventory items:", inventoryItems);
+  }, [initialProduct.id, product, inventoryItems]);
 
   // Get image URLs from product's f1-f5 fields
   const productImages = [
@@ -120,74 +137,17 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
 
   // Update tab names and IDs
   const tabs = [
-    { id: 'core', label: 'Core' },
-    { id: 'inventory', label: 'Inventory' },
-    { id: 'notes', label: 'Notes' },
-    { id: 'publish', label: 'Publish' }
+    { id: 'core', label: 'C' },
+    { id: 'attributes', label: 'A' },
+    { id: 'publish', label: 'P' }
   ];
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'core': // Changed from 'basic' to 'core'
+      case 'core':
         return (
           <View style={styles.tabContent}>
             <View style={styles.card}>
-              <View style={styles.basicInfoHeader}>
-                <TouchableOpacity 
-                  style={styles.imageThumbnail}
-                  onPress={() => handleImageUpload(currentImageIndex)}
-                  disabled={isUploading}
-                >
-                  {isUploading ? (
-                    <View style={styles.uploadingContainer}>
-                      <ActivityIndicator size="large" color="#007AFF" />
-                      <Text style={styles.uploadingText}>Uploading...</Text>
-                    </View>
-                  ) : (
-                    <Image 
-                      source={{ uri: productImages[currentImageIndex] }} 
-                      style={styles.productImage}
-                    />
-                  )}
-                  <View style={styles.imageIndicators}>
-                    {productImages.map((_, index) => (
-                      <TouchableOpacity 
-                        key={index} 
-                        style={[
-                          styles.indicator, 
-                          currentImageIndex === index && styles.activeIndicator
-                        ]}
-                        onPress={() => isUploading ? null : handleImageChange(index)}
-                        onLongPress={() => isUploading ? null : handleImageUpload(index)}
-                        disabled={isUploading}
-                      >
-                        <Text style={[
-                          styles.indicatorText,
-                          product[`f${index + 1}` as keyof Product] ? styles.indicatorTextUploaded : {}
-                        ]}>
-                          {index + 1}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </TouchableOpacity>
-                
-                <View style={styles.productTitleContainer}>
-                  <TextInput
-                    style={styles.productTitle}
-                    value={product.title}
-                    onChangeText={(value) => handleInputChange('title', value)}
-                  />
-                  <TextInput
-                    style={styles.productCategory}
-                    value={product.category}
-                    onChangeText={(value) => handleInputChange('category', value)}
-                    placeholder="Category"
-                  />
-                  {/* Removed the hint text */}
-                </View>
-              </View>
-              
               <View style={styles.bottomInfoContainer}>
                 <View style={styles.leftBottomContainer}>
                   <TextInput
@@ -216,31 +176,38 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
                 </View>
               </View>
             </View>
+            
+            {/* Inventory Items List */}
+            <View style={styles.inventorySection}>
+              <Text style={styles.inventorySectionTitle}>Inventory Items</Text>
+              
+              {inventoryItems.length === 0 ? (
+                <Text style={styles.noInventoryText}>No inventory items associated with this product</Text>
+              ) : (
+                <View style={styles.inventoryList}>
+                  <View style={styles.inventoryHeader}>
+                    <Text style={styles.inventoryHeaderCell}>SKU</Text>
+                    <Text style={styles.inventoryHeaderCell}>Name</Text>
+                    <Text style={styles.inventoryHeaderCell}>Available</Text>
+                    <Text style={styles.inventoryHeaderCell}>Location</Text>
+                  </View>
+                  
+                  {inventoryItems.map((item) => (
+                    <View key={item.id} style={styles.inventoryRow}>
+                      <Text style={styles.inventoryCell} numberOfLines={1}>{item.sku || '-'}</Text>
+                      <Text style={styles.inventoryCell} numberOfLines={1}>{item.name || '-'}</Text>
+                      <Text style={styles.inventoryCell}>{item.available || 0}</Text>
+                      <Text style={styles.inventoryCell} numberOfLines={1}>{item.location || '-'}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
           </View>
         );
-      case 'inventory': // Changed from 'details' to 'inventory'
+      case 'attributes':
         return (
           <View style={styles.tabContent}>
-            <InfoRow label="Collection" value={product.collection} />
-            <InfoRow label="Tags" value={product.tags} />
-            <InfoRow label="Notes" value={product.notes} />
-            <InfoRow label="Options" value={product.options} />
-          </View>
-        );
-      case 'notes': // Changed from 'sales' to 'notes'
-        return (
-          <View style={styles.tabContent}>
-            <InfoRow label="POS" value={product.pos} />
-            <InfoRow label="Sales Channels" value={product.schannels} />
-            <InfoRow label="Tax" value={product.tax} />
-            <InfoRow label="Web Enabled" value={product.web ? 'Yes' : 'No'} />
-          </View>
-        );
-      case 'publish': // Changed from 'metadata' to 'publish'
-        return (
-          <View style={styles.tabContent}>
-            <InfoRow label="SEO" value={product.seo} />
-            <InfoRow label="Metadata" value={product.metadata} />
             <View style={styles.imagesContainer}>
               <Text style={styles.imagesSectionTitle}>Product Images</Text>
               <View style={styles.imagesGrid}>
@@ -264,6 +231,23 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
                 })}
               </View>
             </View>
+            <InfoRow label="Collection" value={product.collection} />
+            <InfoRow label="Tags" value={product.tags} />
+            <InfoRow label="Notes" value={product.notes} />
+            <InfoRow label="Options" value={product.options} />
+            <InfoRow label="Type" value={product.type} />
+            <InfoRow label="Vendor" value={product.vendor} />
+            <InfoRow label="POS" value={product.pos} />
+            <InfoRow label="Sales Channels" value={product.schannels} />
+            <InfoRow label="Tax" value={product.tax} />
+            <InfoRow label="Web Enabled" value={product.web ? 'Yes' : 'No'} />
+          </View>
+        );
+      case 'publish':
+        return (
+          <View style={styles.tabContent}>
+            <InfoRow label="SEO" value={product.seo} />
+            <InfoRow label="Metadata" value={product.metadata} />
           </View>
         );
     }
@@ -273,10 +257,18 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.tabs}>
-          {tabs.map(tab => (
+          <Text style={styles.productNameInTabs} numberOfLines={1} ellipsizeMode="tail">
+            {product.title || 'Untitled Product'}
+          </Text>
+          <View style={styles.tabSpacer}></View>
+          {tabs.map((tab, index) => (
             <TouchableOpacity
               key={tab.id}
-              style={[styles.tab, activeTab === tab.id && styles.activeTab]}
+              style={[
+                styles.tab, 
+                activeTab === tab.id && styles.activeTab,
+                index === tabs.length - 1 && styles.lastTab
+              ]}
               onPress={() => setActiveTab(tab.id)}
             >
               <Text style={[styles.tabText, activeTab === tab.id && styles.activeTabText]}>
@@ -331,22 +323,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    justifyContent: 'flex-end', // Align tabs to the right
+    alignItems: 'center', // Center items vertically
+    paddingLeft: 10, // Add some padding on the left for the product name
+  },
+  tabSpacer: {
+    flex: 1, // Takes up space on the left, pushing tabs to the right
   },
   tab: {
-    flex: 1,
-    padding: 12,
+    padding: 0, // Remove padding
     alignItems: 'center',
+    justifyContent: 'center',
+    width: 40, // Fixed width for square shape
+    height: 40, // Fixed height for square shape
+    marginLeft: 5, // Add small spacing between tabs
+    marginVertical: 8, // Add spacing above and below
+    borderWidth: 1, // Add light border
+    borderColor: '#ddd', // Light border color
   },
   activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#007AFF',
+    borderColor: '#007AFF', // Highlight active tab with blue border
+    backgroundColor: 'rgba(0, 122, 255, 0.05)', // Very light blue background
   },
   tabText: {
     color: '#666',
+    fontWeight: '500', // Make text slightly bolder
   },
   activeTabText: {
     color: '#007AFF',
-    fontWeight: '500',
+    fontWeight: '600',
+  },
+  lastTab: {
+    marginRight: 15, // Add extra spacing after the last tab (P box)
+  },
+  productNameInTabs: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginLeft: 5,
+    maxWidth: '40%', // Limit width to prevent overflow
+    overflow: 'hidden',
   },
   content: {
     flex: 1,
@@ -542,6 +558,54 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginTop: 4,
+  },
+  inventorySection: {
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  inventorySectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  inventoryList: {
+    borderWidth: 1,
+    borderColor: '#eee',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  inventoryHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#f5f5f5',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  inventoryHeaderCell: {
+    flex: 1,
+    fontWeight: 'bold',
+    fontSize: 13,
+    color: '#666',
+  },
+  inventoryRow: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  inventoryCell: {
+    flex: 1,
+    fontSize: 13,
+    color: '#333',
+  },
+  noInventoryText: {
+    padding: 16,
+    color: '#999',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    backgroundColor: '#f9f9f9',
+    borderRadius: 8,
   },
 });
 

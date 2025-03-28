@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, ListBucketsCommand, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import * as FileSystem from 'expo-file-system';
 
@@ -15,6 +15,88 @@ const config = {
 
 const BUCKET_NAME = "tarapp-pqdhr";
 const s3Client = new S3Client(config);
+
+/**
+ * List all buckets in the S3/R2 account
+ * @returns Promise containing array of bucket information
+ */
+export const listBuckets = async () => {
+  try {
+    const command = new ListBucketsCommand({});
+    const response = await s3Client.send(command);
+    return response.Buckets;
+  } catch (error) {
+    console.error("Error listing buckets", error);
+    throw error;
+  }
+};
+
+/**
+ * List objects in a bucket with optional prefix
+ * @param prefix Optional prefix filter for objects (folder-like filtering)
+ * @param maxKeys Maximum number of keys to return
+ * @returns Promise containing array of object information
+ */
+export const listObjects = async (prefix?: string, maxKeys: number = 1000) => {
+  try {
+    const command = new ListObjectsV2Command({
+      Bucket: BUCKET_NAME,
+      Prefix: prefix,
+      MaxKeys: maxKeys
+    });
+    
+    const response = await s3Client.send(command);
+    return response.Contents;
+  } catch (error) {
+    console.error("Error listing objects", error);
+    throw error;
+  }
+};
+
+/**
+ * Get a presigned URL for downloading/viewing an object
+ * @param key The key (path) of the object in the bucket
+ * @param expiresIn Expiration time in seconds (default: 3600 - 1 hour)
+ * @returns Promise containing the presigned URL
+ */
+export const getPresignedDownloadUrl = async (key: string, expiresIn: number = 3600) => {
+  try {
+    const command = new GetObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key
+    });
+    
+    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn });
+    return signedUrl;
+  } catch (error) {
+    console.error("Error generating presigned download URL", error);
+    throw error;
+  }
+};
+
+/**
+ * Download an object from the bucket
+ * @param key The key (path) of the object in the bucket
+ * @param localFilePath The local file path to save the object to
+ * @returns Promise resolving when download is complete
+ */
+export const downloadObject = async (key: string, localFilePath: string) => {
+  try {
+    // Get a presigned URL for the object
+    const downloadUrl = await getPresignedDownloadUrl(key);
+    
+    // Download the file using Expo FileSystem
+    const downloadResult = await FileSystem.downloadAsync(
+      downloadUrl,
+      localFilePath
+    );
+    
+    return downloadResult;
+  } catch (error) {
+    console.error("Error downloading object", error);
+    throw error;
+  }
+};
 
 /**
  * Generate a pre-signed URL for uploading a file
