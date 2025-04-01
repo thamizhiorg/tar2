@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, SafeAreaView, Dimensions, BackHandler, Image, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, SafeAreaView, Dimensions, BackHandler, Image, Alert, ActivityIndicator, Animated, TouchableWithoutFeedback } from 'react-native';
 import { InstaQLEntity, init } from "@instantdb/react-native";
 import { AppSchema } from "../../instant.schema";
 import * as ImagePicker from 'expo-image-picker';
@@ -17,9 +17,17 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => {
-  const [activeTab, setActiveTab] = useState('core'); // Changed from 'basic' to 'core'
+  const [activeTab, setActiveTab] = useState('core');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadingInventoryId, setUploadingInventoryId] = useState<string | null>(null);
+  const [productOptions, setProductOptions] = useState<{[key: string]: {[key: string]: string}}>({});
+  const [optionModalVisible, setOptionModalVisible] = useState(false);
+  const [currentOptionType, setCurrentOptionType] = useState<string | null>(null);
+  const [editingOptions, setEditingOptions] = useState(false);
+  const [newOptionKey, setNewOptionKey] = useState('');
+  const [newOptionValue, setNewOptionValue] = useState('');
+  const [bottomSheetAnimation] = useState(new Animated.Value(0));
   
   // Add hardware back button handler
   useEffect(() => {
@@ -61,6 +69,82 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
     console.log("Product data:", product);
     console.log("Inventory items:", inventoryItems);
   }, [initialProduct.id, product, inventoryItems]);
+
+  // Parse options from product if it exists
+  useEffect(() => {
+    if (product.options) {
+      try {
+        const parsedOptions = JSON.parse(product.options as string);
+        setProductOptions(parsedOptions);
+      } catch (e) {
+        console.error("Failed to parse product options:", e);
+        setProductOptions({});
+      }
+    }
+  }, [product.options]);
+
+  // Save options back to product
+  const saveOptions = (updatedOptions: {[key: string]: {[key: string]: string}}) => {
+    setProductOptions(updatedOptions);
+    handleInputChange('options', JSON.stringify(updatedOptions));
+  };
+
+  // Add a new option key-value pair
+  const addOption = () => {
+    if (!currentOptionType || !newOptionKey || !newOptionValue) return;
+    
+    const updatedOptions = {...productOptions};
+    if (!updatedOptions[currentOptionType]) {
+      updatedOptions[currentOptionType] = {};
+    }
+    updatedOptions[currentOptionType][newOptionKey] = newOptionValue;
+    
+    saveOptions(updatedOptions);
+    setNewOptionKey('');
+    setNewOptionValue('');
+    closeOptionModal();
+  };
+
+  // Remove an option
+  const removeOption = (optionType: string, optionKey: string) => {
+    const updatedOptions = {...productOptions};
+    if (updatedOptions[optionType] && updatedOptions[optionType][optionKey]) {
+      delete updatedOptions[optionType][optionKey];
+      
+      // Remove the option type if it's empty
+      if (Object.keys(updatedOptions[optionType]).length === 0) {
+        delete updatedOptions[optionType];
+      }
+      
+      saveOptions(updatedOptions);
+    }
+  };
+
+  // Open modal for adding a new option
+  const openOptionModal = (optionType: string) => {
+    setCurrentOptionType(optionType);
+    setNewOptionKey('');
+    setNewOptionValue('');
+    setOptionModalVisible(true);
+    
+    // Animate the bottom sheet up
+    Animated.timing(bottomSheetAnimation, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+  
+  // Close the modal with animation
+  const closeOptionModal = () => {
+    Animated.timing(bottomSheetAnimation, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setOptionModalVisible(false);
+    });
+  };
 
   // Get image URLs from product's f1-f5 fields
   const productImages = [
@@ -114,7 +198,7 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
       const uploadSuccess = await uploadFileWithPresignedUrl(imageUri, presignedUrl, contentType);
       
       if (uploadSuccess) {
-        // Use the getPublicUrl helper to generate the proper URL with the Sevalla domain
+        // Use the getPublicUrl helper to generate the proper URL
         const publicUrl = getPublicUrl(uniqueFilename);
         const fieldName = `f${index + 1}` as keyof Product;
         
@@ -135,6 +219,61 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
     }
   };
 
+  const handleInventoryImageUpload = async (inventoryId: string) => {
+    try {
+      // Request permission
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (!permissionResult.granted) {
+        Alert.alert('Permission Required', 'You need to grant access to your photos to upload images.');
+        return;
+      }
+
+      // Pick image
+      const pickerResult = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (pickerResult.canceled) return;
+
+      // Start upload process
+      setIsUploading(true);
+      setUploadingInventoryId(inventoryId);
+      
+      const imageUri = pickerResult.assets[0].uri;
+      const filename = imageUri.split('/').pop() || 'image.jpg';
+      const uniqueFilename = generateUniqueFilename(filename);
+      
+      // Get presigned URL for S3 upload
+      const contentType = 'image/jpeg';
+      const presignedUrl = await getPresignedUploadUrl(uniqueFilename, contentType);
+      
+      // Upload file to S3
+      const uploadSuccess = await uploadFileWithPresignedUrl(imageUri, presignedUrl, contentType);
+      
+      if (uploadSuccess) {
+        // Use the getPublicUrl helper to generate the proper URL
+        const publicUrl = getPublicUrl(uniqueFilename);
+        
+        // Update the inventory item's f1 field with the image URL
+        db.transact(db.tx.inventory[inventoryId].update({
+          f1: publicUrl
+        }));
+      } else {
+        Alert.alert('Upload Failed', 'There was a problem uploading your image.');
+      }
+    } catch (error) {
+      console.error('Inventory image upload error:', error);
+      Alert.alert('Error', 'An error occurred while uploading the image.');
+    } finally {
+      setIsUploading(false);
+      setUploadingInventoryId(null);
+    }
+  };
+
   // Update tab names and IDs
   const tabs = [
     { id: 'core', label: 'C' },
@@ -148,6 +287,146 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
         return (
           <View style={styles.tabContent}>
             <View style={styles.card}>
+              {/* Product Options Section */}
+              <View style={styles.optionsContainer}>
+                <View style={styles.optionsSectionHeader}>
+                  <View style={styles.optionsSectionHeaderSpacer} />
+                  <TouchableOpacity 
+                    style={styles.editOptionsButton}
+                    onPress={() => setEditingOptions(!editingOptions)}
+                  >
+                    <Text style={styles.editOptionsButtonText}>
+                      {editingOptions ? 'Done' : 'Edit'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                
+                {/* Color Options */}
+                <View style={styles.optionRow}>
+                  <Text style={styles.optionType}>Color</Text>
+                  {editingOptions && (
+                    <TouchableOpacity 
+                      style={styles.addOptionButton}
+                      onPress={() => openOptionModal('color')}
+                    >
+                      <Text style={styles.addOptionButtonText}>+</Text>
+                    </TouchableOpacity>
+                  )}
+                  
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionValuesScroll}>
+                    {productOptions.color && Object.keys(productOptions.color).length > 0 ? (
+                      Object.entries(productOptions.color).map(([key, value]) => (
+                        <View key={key} style={styles.colorOptionItem}>
+                          <View style={styles.colorSwatchContainer}>
+                            <View style={[styles.colorSwatch, { backgroundColor: value }]} />
+                            {editingOptions && (
+                              <TouchableOpacity 
+                                style={styles.removeOptionButton}
+                                onPress={() => removeOption('color', key)}
+                              >
+                                <Text style={styles.removeOptionButtonText}>×</Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        </View>
+                      ))
+                    ) : (
+                      <TouchableOpacity 
+                        style={styles.emptyOptionsContainer}
+                        onPress={() => openOptionModal('color')}
+                      >
+                        <Text style={styles.emptyOptionsText}>Add color options</Text>
+                      </TouchableOpacity>
+                    )}
+                  </ScrollView>
+                </View>
+                
+                {/* Size Options */}
+                <View style={styles.optionRow}>
+                  <Text style={styles.optionType}>Size</Text>
+                  {editingOptions && (
+                    <TouchableOpacity 
+                      style={styles.addOptionButton}
+                      onPress={() => openOptionModal('size')}
+                    >
+                      <Text style={styles.addOptionButtonText}>+</Text>
+                    </TouchableOpacity>
+                  )}
+                  
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionValuesScroll}>
+                    {productOptions.size && Object.keys(productOptions.size).length > 0 ? (
+                      Object.entries(productOptions.size).map(([key, value]) => (
+                        <View key={key} style={styles.sizeOptionItem}>
+                          <View style={styles.sizeSwatchContainer}>
+                            <View style={styles.sizeSwatch}>
+                              <Text style={styles.sizeSwatchText}>{value}</Text>
+                            </View>
+                            {editingOptions && (
+                              <TouchableOpacity 
+                                style={styles.removeOptionButton}
+                                onPress={() => removeOption('size', key)}
+                              >
+                                <Text style={styles.removeOptionButtonText}>×</Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        </View>
+                      ))
+                    ) : (
+                      <TouchableOpacity 
+                        style={styles.emptyOptionsContainer}
+                        onPress={() => openOptionModal('size')}
+                      >
+                        <Text style={styles.emptyOptionsText}>Add size options</Text>
+                      </TouchableOpacity>
+                    )}
+                  </ScrollView>
+                </View>
+                
+                {/* Material Options */}
+                <View style={styles.optionRow}>
+                  <Text style={styles.optionType}>Material</Text>
+                  {editingOptions && (
+                    <TouchableOpacity 
+                      style={styles.addOptionButton}
+                      onPress={() => openOptionModal('material')}
+                    >
+                      <Text style={styles.addOptionButtonText}>+</Text>
+                    </TouchableOpacity>
+                  )}
+                  
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionValuesScroll}>
+                    {productOptions.material && Object.keys(productOptions.material).length > 0 ? (
+                      Object.entries(productOptions.material).map(([key, value]) => (
+                        <View key={key} style={styles.materialOptionItem}>
+                          <View style={styles.materialSwatchContainer}>
+                            <Image 
+                              source={{ uri: value.startsWith('http') ? value : 'https://via.placeholder.com/44' }} 
+                              style={styles.materialSwatch} 
+                            />
+                            {editingOptions && (
+                              <TouchableOpacity 
+                                style={styles.removeOptionButton}
+                                onPress={() => removeOption('material', key)}
+                              >
+                                <Text style={styles.removeOptionButtonText}>×</Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        </View>
+                      ))
+                    ) : (
+                      <TouchableOpacity 
+                        style={styles.emptyOptionsContainer}
+                        onPress={() => openOptionModal('material')}
+                      >
+                        <Text style={styles.emptyOptionsText}>Add material options</Text>
+                      </TouchableOpacity>
+                    )}
+                  </ScrollView>
+                </View>
+              </View>
+              
               <View style={styles.bottomInfoContainer}>
                 <View style={styles.leftBottomContainer}>
                   {/* Type and Vendor fields removed */}
@@ -174,9 +453,26 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
                   {inventoryItems.map((item) => (
                     <View key={item.id} style={styles.inventoryItem}>
                       <View style={styles.inventoryItemHeader}>
-                        <View style={styles.inventoryItemNameContainer}>
-                          <Text style={styles.inventoryItemName}>{item.name || 'Unnamed Item'}</Text>
-                          {item.sku && <Text style={styles.inventoryItemSku}>SKU: {item.sku}</Text>}
+                        <View style={styles.inventoryItemImageAndDetails}>
+                          <TouchableOpacity 
+                            style={styles.inventoryItemImage}
+                            onPress={() => handleInventoryImageUpload(item.id)}
+                            disabled={isUploading && uploadingInventoryId === item.id}
+                          >
+                            <Image 
+                              source={{ uri: item.f1 || 'https://via.placeholder.com/60?text=Inv' }} 
+                              style={styles.inventoryThumbnail}
+                            />
+                            {isUploading && uploadingInventoryId === item.id && (
+                              <View style={styles.inventoryUploadingOverlay}>
+                                <ActivityIndicator size="small" color="#007AFF" />
+                              </View>
+                            )}
+                          </TouchableOpacity>
+                          <View style={styles.inventoryItemNameContainer}>
+                            <Text style={styles.inventoryItemName}>{item.name || 'Unnamed Item'}</Text>
+                            {item.sku && <Text style={styles.inventoryItemSku}>SKU: {item.sku}</Text>}
+                          </View>
                         </View>
                         <Text style={styles.inventoryItemAvailable}>{item.available || 0}</Text>
                       </View>
@@ -188,6 +484,7 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
                       )}
                     </View>
                   ))}
+
                 </ScrollView>
               )}
             </View>
@@ -270,6 +567,79 @@ const ProductCard = ({ product: initialProduct, onClose }: ProductCardProps) => 
           {renderTabContent()}
         </ScrollView>
       </View>
+
+      {/* Bottom Drawer Option Modal */}
+      {optionModalVisible && (
+        <>
+          <TouchableWithoutFeedback onPress={closeOptionModal}>
+            <View style={styles.modalOverlay} />
+          </TouchableWithoutFeedback>
+          
+          <Animated.View 
+            style={[
+              styles.bottomDrawer,
+              {
+                transform: [
+                  {
+                    translateY: bottomSheetAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [300, 0],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <View style={styles.bottomDrawerHandle}>
+              <View style={styles.bottomDrawerHandleBar} />
+            </View>
+            
+            <Text style={styles.bottomDrawerTitle}>
+              Add {currentOptionType === 'color' ? 'Color' : 
+                  currentOptionType === 'size' ? 'Size' : 'Material'} Option
+            </Text>
+            
+            <View style={styles.bottomDrawerContent}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Name</Text>
+                <TextInput
+                  style={styles.bottomDrawerInput}
+                  value={newOptionKey}
+                  onChangeText={setNewOptionKey}
+                  placeholder={
+                    currentOptionType === 'color' ? "e.g. Red" : 
+                    currentOptionType === 'size' ? "e.g. Small" : "e.g. Cotton"
+                  }
+                />
+              </View>
+              
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Value</Text>
+                <TextInput
+                  style={styles.bottomDrawerInput}
+                  value={newOptionValue}
+                  onChangeText={setNewOptionValue}
+                  placeholder={
+                    currentOptionType === 'color' ? "e.g. #FF0000" : 
+                    currentOptionType === 'size' ? "e.g. S" : "URL to image"
+                  }
+                />
+                
+                {currentOptionType === 'color' && newOptionValue ? (
+                  <View style={[styles.colorPreview, { backgroundColor: newOptionValue }]} />
+                ) : null}
+              </View>
+              
+              <TouchableOpacity 
+                style={styles.addButton}
+                onPress={addOption}
+              >
+                <Text style={styles.addButtonText}>Add Option</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </>
+      )}
     </SafeAreaView>
   );
 };
@@ -388,108 +758,101 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
     padding: 4,
   },
-  basicInfoHeader: {
-    flexDirection: 'row',
+  optionsContainer: {
     marginBottom: 15,
-    paddingBottom: 15,
   },
-  imageThumbnail: {
-    width: 100,
-    height: 100,
-    marginRight: 15,
-    position: 'relative',
-  },
-  productImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 8,
-  },
-  imageIndicators: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    position: 'absolute',
-    bottom: -20,
-    left: 0,
-    right: 0,
-  },
-  indicator: {
-    width: 24,
-    height: 24,
-    borderRadius: 0, // Square instead of round
-    backgroundColor: '#fff',
-    marginHorizontal: 0, // No spacing between indicators
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 0.5,
-    borderColor: '#ccc',
-  },
-  activeIndicator: {
-    backgroundColor: '#fff',
-  },
-  indicatorText: {
-    fontSize: 12, // Larger text
-    fontWeight: '500',
-    color: '#333',
-  },
-  productTitleContainer: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  productTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 2, // Reduced space between title and category
-    color: '#333',
-  },
-  productCategory: {
-    fontSize: 14,
-    color: '#999', // Light grey
-    fontWeight: 'bold', // Bold instead of italic
-    fontStyle: 'normal', // Remove italic
-    marginBottom: 5,
-  },
-  productUnit: {
-    fontSize: 12,
-    color: '#888',
-    fontStyle: 'italic',
-  },
-  bottomInfoContainer: {
+  optionsSectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
     alignItems: 'center',
+    marginBottom: 8,
   },
-  leftBottomContainer: {
-    flex: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rightBottomContainer: {
+  optionsSectionHeaderSpacer: {
     flex: 1,
+  },
+  editOptionsButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    backgroundColor: '#f0f0f0',
+  },
+  editOptionsButtonText: {
+    color: '#007AFF',
+    fontWeight: '500',
+    fontSize: 14,
+  },
+  optionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    marginBottom: 12,
   },
-  bottomInput: {
+  optionType: {
+    width: 70,
     fontSize: 14,
-    color: '#333',
-    padding: 2,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: '#444',
   },
-  separator: {
-    marginHorizontal: 8,
-    color: '#999',
+  addOptionButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
   },
-  quantityValue: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#000',
-    marginRight: 4,
-  },
-  quantityUnit: {
+  addOptionButtonText: {
+    color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000',
+    lineHeight: 24,
+    marginTop: -2,
+  },
+  removeOptionButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#ff3b30',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'white',
+  },
+  removeOptionButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+    lineHeight: 20,
+    marginTop: -2,
+  },
+  emptyOptionsContainer: {
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    borderStyle: 'dashed',
+    backgroundColor: '#f9f9f9',
+  },
+  emptyOptionsText: {
+    color: '#999',
+    fontSize: 12,
+  },
+  inventoryItemNameContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  inventoryItemName: {
+    fontWeight: '600',
+    fontSize: 14,
+    color: '#333',
+  },
+  inventoryItemSku: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 2,
   },
   uploadingContainer: {
     width: '100%',
@@ -572,17 +935,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 5,
   },
-  inventoryItemNameContainer: {
+  inventoryItemImageAndDetails: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  inventoryItemName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+  inventoryItemImage: {
+    marginRight: 10,
+    position: 'relative',
   },
-  inventoryItemSku: {
-    fontSize: 12,
-    color: '#666',
+  inventoryThumbnail: {
+    width: 50,
+    height: 50,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  inventoryUploadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 4,
   },
   inventoryItemAvailable: {
     fontSize: 20,
@@ -613,6 +991,168 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
     borderRadius: 8,
   },
-});
+  
+  // Bottom drawer modal styles
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  bottomDrawer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -3,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 10,
+  },
+  bottomDrawerHandle: {
+    width: '100%',
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bottomDrawerHandleBar: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#ddd',
+  },
+  bottomDrawerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  bottomDrawerContent: {
+    paddingBottom: 20,
+  },
+  inputGroup: {
+    marginBottom: 15,
+    position: 'relative',
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 5,
+    fontWeight: '500',
+  },
+  bottomDrawerInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: '#f9f9f9',
+  },
+  addButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  addButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  colorPreview: {
+    position: 'absolute',
+    right: 15,
+    top: 38,
+    width: 25,
+    height: 25,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  colorOptionItem: {
+    alignItems: 'center',
+    marginRight: 16,
+    marginVertical: 8,
+    width: 50,
+  },
+  colorSwatchContainer: {
+    position: 'relative',
+    marginBottom: 4,
+  },
+  colorSwatch: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  colorOptionText: {
+    fontSize: 12,
+    color: '#333',
+    textAlign: 'center',
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  sizeOptionItem: {
+    alignItems: 'center',
+    marginRight: 16,
+    marginVertical: 8,
+    width: 50,
+  },
+  sizeSwatchContainer: {
+    position: 'relative',
+    marginBottom: 4,
+  },
+  sizeSwatch: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f5f5f5',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sizeSwatchText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  materialOptionItem: {
+    alignItems: 'center',
+    marginRight: 16,
+    marginVertical: 8,
+    width: 50,
+  },
+  materialSwatchContainer: {
+    position: 'relative',
+    marginBottom: 4,
+  },
+  materialSwatch: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  optionValuesScroll: {
+    flexDirection: 'row',
+    paddingVertical: 6,
+    flexWrap: 'wrap', // Allow wrapping for multiple values
+  },
+}); 
 
 export default ProductCard;

@@ -97,6 +97,12 @@ export default function HUD({
     );
   };
 
+  // Extract just the emoji icon from the selected agent
+  const getSelectedAgentIcon = () => {
+    if (!selectedAgent) return '';
+    return selectedAgent.split(' ')[0];
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.hudContainer}>
@@ -112,7 +118,7 @@ export default function HUD({
             style={styles.agentContainer}
             onPress={handleAgentTap}
           >
-            <Text style={styles.agentText}>{selectedAgent}</Text>
+            <Text style={styles.agentText}>{getSelectedAgentIcon()}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -186,7 +192,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   agentText: {
-    fontSize: 14,
+    fontSize: 18,
     color: '#333',
   },
   agentList: {
